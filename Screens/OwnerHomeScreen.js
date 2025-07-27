@@ -14,29 +14,29 @@ import {
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 
-// Updated beginner-friendly job categories
+// Updated job categories based on actual work requirements
 const jobCategories = {
   daily: {
     title: 'Daily Work',
     icon: 'today',
     color: '#10B981',
-    description: 'Perfect for beginners - No experience required',
+    description: 'Physical labor and routine tasks - Choose based on your needs',
     jobs: [
       { 
         name: 'Farm Labor', 
         icon: 'leaf', 
         color: '#10B981',
-        experienceRequired: 'none',
+        experienceRequired: 'flexible',
         trainingProvided: true,
-        description: 'Learn while you work - Training provided'
+        description: 'Agricultural work - Can hire experienced or train new workers'
       },
       { 
         name: 'Construction Helper', 
         icon: 'hammer', 
         color: '#F59E0B',
-        experienceRequired: 'none',
+        experienceRequired: 'flexible',
         trainingProvided: true,
-        description: 'Start with basic tasks - Guidance provided'
+        description: 'Construction support - Experienced workers preferred, helpers welcome'
       },
       { 
         name: 'Sweeper', 
@@ -44,15 +44,15 @@ const jobCategories = {
         color: '#3B82F6',
         experienceRequired: 'none',
         trainingProvided: false,
-        description: 'Simple work - Perfect for beginners'
+        description: 'Cleaning work - No experience required'
       },
       { 
         name: 'Maid/Housekeeping', 
         icon: 'people', 
         color: '#8B5CF6',
-        experienceRequired: 'none',
+        experienceRequired: 'flexible',
         trainingProvided: true,
-        description: 'Learn household work - Training included'
+        description: 'Household work - Experienced preferred, training available'
       },
       { 
         name: 'Loading/Unloading', 
@@ -66,9 +66,9 @@ const jobCategories = {
         name: 'Gardening', 
         icon: 'flower', 
         color: '#10B981',
-        experienceRequired: 'none',
+        experienceRequired: 'flexible',
         trainingProvided: true,
-        description: 'Learn gardening skills - Training provided'
+        description: 'Garden maintenance - Experienced gardeners or train new workers'
       },
     ]
   },
@@ -76,7 +76,7 @@ const jobCategories = {
     title: 'Technical Work',
     icon: 'build',
     color: '#6366F1',
-    description: 'Basic skills welcome - Learn on the job',
+    description: 'Skilled work requiring specific expertise',
     jobs: [
       { 
         name: 'Electrician Helper', 
@@ -84,7 +84,7 @@ const jobCategories = {
         color: '#EF4444',
         experienceRequired: 'basic',
         trainingProvided: true,
-        description: 'Assist experienced electricians - Learn while working'
+        description: 'Electrical work - Assist experienced electricians'
       },
       { 
         name: 'Plumber Helper', 
@@ -92,7 +92,7 @@ const jobCategories = {
         color: '#06B6D4',
         experienceRequired: 'basic',
         trainingProvided: true,
-        description: 'Start as helper - Gain experience gradually'
+        description: 'Plumbing work - Start as helper, gain experience'
       },
       { 
         name: 'Carpenter Assistant', 
@@ -100,7 +100,7 @@ const jobCategories = {
         color: '#A855F7',
         experienceRequired: 'basic',
         trainingProvided: true,
-        description: 'Learn carpentry basics - Mentorship available'
+        description: 'Carpentry work - Learn from experienced carpenters'
       },
       { 
         name: 'Mechanic Trainee', 
@@ -108,7 +108,7 @@ const jobCategories = {
         color: '#F97316',
         experienceRequired: 'basic',
         trainingProvided: true,
-        description: 'Start as trainee - Learn from experts'
+        description: 'Vehicle repair - Start as trainee, learn from experts'
       },
       { 
         name: 'Mason Helper', 
@@ -116,7 +116,7 @@ const jobCategories = {
         color: '#F59E0B',
         experienceRequired: 'basic',
         trainingProvided: true,
-        description: 'Construction basics - Training provided'
+        description: 'Construction work - Learn masonry skills'
       },
       { 
         name: 'Welder Trainee', 
@@ -124,64 +124,64 @@ const jobCategories = {
         color: '#DC2626',
         experienceRequired: 'basic',
         trainingProvided: true,
-        description: 'Learn welding skills - Safety training included'
+        description: 'Welding work - Learn welding with safety training'
       },
     ]
   }
 };
 
-// Updated beginner-friendly job postings
+// Updated job postings based on actual requirements
 const myPostedJobs = [
   {
     id: 1,
-    title: 'Farm Labor - Beginners Welcome',
+    title: 'Farm Labor - Experienced Workers Preferred',
     category: 'Farm Labor',
     location: 'Rajam, Srikakulam',
     salary: '₹450/day',
     applicants: 12,
     status: 'Active',
     postedDate: '2 hours ago',
-    description: 'Rice field harvesting work. Perfect for beginners - we will teach you everything!',
+    description: 'Rice field harvesting work. Experienced farm workers preferred, but willing to train new workers.',
     stream: 'daily',
-    experienceLevel: 'beginner',
+    experienceLevel: 'experienced',
     trainingProvided: true,
     requirements: [
-      'Willingness to learn',
-      'Physically fit',
+      'Physical fitness required',
+      'Experience in farming preferred',
       'Available for full day',
-      'No prior experience needed'
+      'Willing to work outdoors'
     ],
     benefits: [
-      'On-job training',
+      'On-job training for new workers',
       'Daily payment',
       'Lunch provided',
-      'Skill development'
+      'Skill development opportunities'
     ],
     postedBy: 'Ramesh Naidu',
     contact: '9876543210',
   },
   {
     id: 2,
-    title: 'Construction Helper - Training Provided',
+    title: 'Construction Helper - Experience Required',
     category: 'Construction Helper',
     location: 'Kothavalasa',
     salary: '₹600/day',
     applicants: 8,
     status: 'Active',
     postedDate: '1 day ago',
-    description: 'House construction work. Start as helper, learn construction basics with experienced team.',
+    description: 'House construction work. Looking for experienced construction helpers or workers with basic knowledge.',
     stream: 'daily',
-    experienceLevel: 'beginner',
+    experienceLevel: 'experienced',
     trainingProvided: true,
     requirements: [
-      'Willingness to learn',
+      'Construction experience preferred',
+      'Basic understanding of tools',
       'Hardworking attitude',
-      'Basic understanding of tools (will teach)',
-      'No experience required'
+      'Safety conscious'
     ],
     benefits: [
-      'Skill training',
-      'Career growth',
+      'Skill enhancement',
+      'Career growth opportunities',
       'Safety equipment provided',
       'Weekly bonus'
     ],
@@ -190,25 +190,25 @@ const myPostedJobs = [
   },
   {
     id: 3,
-    title: 'Plumber Helper - Learn While Working',
+    title: 'Plumber Helper - Basic Skills Required',
     category: 'Plumber Helper',
     location: 'Vizianagaram',
     salary: '₹700/day',
     applicants: 5,
     status: 'Active',
     postedDate: '3 days ago',
-    description: 'Assist experienced plumber. Perfect opportunity to learn plumbing skills.',
+    description: 'Assist experienced plumber. Basic plumbing knowledge required, will provide additional training.',
     stream: 'technical',
-    experienceLevel: 'beginner',
+    experienceLevel: 'experienced',
     trainingProvided: true,
     requirements: [
-      'Basic interest in plumbing',
+      'Basic plumbing knowledge',
+      'Tool handling experience',
       'Willingness to learn',
-      'Can work with tools',
-      'No prior experience needed'
+      'Physical fitness'
     ],
     benefits: [
-      'Hands-on training',
+      'Advanced training provided',
       'Tool usage training',
       'Future job opportunities',
       'Certification support'
@@ -218,22 +218,22 @@ const myPostedJobs = [
   },
   {
     id: 4,
-    title: 'Electrician Trainee - Basic Skills Welcome',
+    title: 'Electrician Helper - Experience Preferred',
     category: 'Electrician Helper',
     location: 'Srikakulam',
     salary: '₹650/day',
     applicants: 3,
     status: 'Active',
     postedDate: '1 day ago',
-    description: 'Home electrical work. Perfect for those with basic electrical knowledge or willing to learn.',
+    description: 'Home electrical work. Experienced electrician helpers preferred, basic electrical knowledge required.',
     stream: 'technical',
-    experienceLevel: 'beginner',
+    experienceLevel: 'experienced',
     trainingProvided: true,
     requirements: [
-      'Basic electrical knowledge (preferred)',
-      'Safety conscious',
-      'Willing to learn',
-      'Can work with simple tools'
+      'Electrical work experience',
+      'Safety consciousness',
+      'Basic electrical knowledge',
+      'Tool handling skills'
     ],
     benefits: [
       'Professional training',
@@ -246,22 +246,22 @@ const myPostedJobs = [
   },
   {
     id: 5,
-    title: 'Garden Maintenance - Training Included',
+    title: 'Garden Maintenance - Experienced Gardeners',
     category: 'Gardening',
     location: 'Vizianagaram',
     salary: '₹400/day',
     applicants: 6,
     status: 'Active',
     postedDate: '4 hours ago',
-    description: 'Learn gardening skills while maintaining beautiful gardens. Perfect for nature lovers.',
+    description: 'Garden maintenance work. Experienced gardeners preferred, will train new workers.',
     stream: 'daily',
-    experienceLevel: 'beginner',
+    experienceLevel: 'experienced',
     trainingProvided: true,
     requirements: [
-      'Love for plants and nature',
-      'Physically fit',
-      'Willing to learn',
-      'No experience required'
+      'Gardening experience preferred',
+      'Knowledge of plants and tools',
+      'Physical fitness',
+      'Love for outdoor work'
     ],
     benefits: [
       'Plant care training',
@@ -274,22 +274,22 @@ const myPostedJobs = [
   },
   {
     id: 6,
-    title: 'Welder Trainee - Safety Training Included',
+    title: 'Welder Trainee - Basic Skills Required',
     category: 'Welder Trainee',
     location: 'Srikakulam',
     salary: '₹800/day',
     applicants: 4,
     status: 'Active',
     postedDate: '6 hours ago',
-    description: 'Learn welding skills with experienced professionals. Safety training and equipment provided.',
+    description: 'Welding work with experienced professionals. Basic metalwork knowledge required, comprehensive training provided.',
     stream: 'technical',
-    experienceLevel: 'beginner',
+    experienceLevel: 'experienced',
     trainingProvided: true,
     requirements: [
-      'Interest in metalwork',
+      'Basic metalwork knowledge',
       'Safety consciousness',
       'Physical fitness',
-      'Willing to learn from scratch'
+      'Interest in welding'
     ],
     benefits: [
       'Complete welding training',
@@ -421,13 +421,14 @@ const OwnerHomeScreen = ({ navigation }) => {
               <View style={styles.featureItem}>
                 <Ionicons name="checkmark-circle" size={16} color="#10B981" />
                 <Text style={styles.featureText}>
-                  {selectedJob.experienceRequired === 'none' ? 'No Experience Required' : 'Basic Skills Welcome'}
+                  {selectedJob.experienceRequired === 'none' ? 'No Experience Required' : 
+                   selectedJob.experienceRequired === 'flexible' ? 'Experience Preferred' : 'Basic Skills Required'}
                 </Text>
               </View>
               {selectedJob.trainingProvided && (
                 <View style={styles.featureItem}>
                   <Ionicons name="school" size={16} color="#4F46E5" />
-                  <Text style={styles.featureText}>Training Provided</Text>
+                  <Text style={styles.featureText}>Training Available</Text>
                 </View>
               )}
             </View>
@@ -455,7 +456,7 @@ const OwnerHomeScreen = ({ navigation }) => {
                   No {selectedJobType} jobs posted yet
                 </Text>
                 <Text style={styles.emptyStateSubtitle}>
-                  Post your first beginner-friendly job to get started
+                  Post your first job to find qualified workers
                 </Text>
               </View>
             ) : (
@@ -483,16 +484,18 @@ const OwnerHomeScreen = ({ navigation }) => {
                   
                   <Text style={styles.jobDescription}>{job.description}</Text>
                   
-                  {/* Beginner-friendly features */}
+                  {/* Job features */}
                   <View style={styles.jobFeatures}>
                     <View style={styles.featureTag}>
                       <Ionicons name="person-add" size={12} color="#10B981" />
-                      <Text style={styles.featureTagText}>Beginner Friendly</Text>
+                      <Text style={styles.featureTagText}>
+                        {job.experienceLevel === 'experienced' ? 'Experienced Workers' : 'Helpers Welcome'}
+                      </Text>
                     </View>
                     {job.trainingProvided && (
                       <View style={styles.featureTag}>
                         <Ionicons name="school" size={12} color="#4F46E5" />
-                        <Text style={styles.featureTagText}>Training Provided</Text>
+                        <Text style={styles.featureTagText}>Training Available</Text>
                       </View>
                     )}
                   </View>
@@ -562,7 +565,8 @@ const OwnerHomeScreen = ({ navigation }) => {
                     <View style={styles.featureItem}>
                       <Ionicons name="checkmark-circle" size={12} color="#10B981" />
                       <Text style={styles.featureText}>
-                        {job.experienceRequired === 'none' ? 'No Experience' : 'Basic Skills'}
+                        {job.experienceRequired === 'none' ? 'No Experience' : 
+                         job.experienceRequired === 'flexible' ? 'Experience Preferred' : 'Basic Skills'}
                       </Text>
                     </View>
                     {job.trainingProvided && (
@@ -584,7 +588,7 @@ const OwnerHomeScreen = ({ navigation }) => {
     return (
       <View>
         <Text style={styles.sectionTitle}>Choose Job Category</Text>
-        <Text style={styles.sectionSubtitle}>All jobs are beginner-friendly with training opportunities</Text>
+        <Text style={styles.sectionSubtitle}>Select based on your work requirements and experience needs</Text>
         <View style={styles.categoriesGrid}>
           {Object.entries(jobCategories).map(([key, category]) => (
             <TouchableOpacity
@@ -630,8 +634,8 @@ const OwnerHomeScreen = ({ navigation }) => {
         </View>
         
         <View style={styles.headerCenter}>
-          <Text style={styles.brandTitle}>VillageWork</Text>
-          <Text style={styles.brandSubtitle}>Beginner-Friendly Jobs</Text>
+          <Text style={styles.brandTitle}>VWork</Text>
+          <Text style={styles.brandSubtitle}>Quality Work Opportunities</Text>
         </View>
         
         <View style={styles.headerRight}>
@@ -675,7 +679,7 @@ const OwnerHomeScreen = ({ navigation }) => {
           <View style={styles.searchBar}>
             <Ionicons name="search" size={20} color="#9CA3AF" />
             <TextInput
-              placeholder="Search beginner-friendly jobs..."
+              placeholder="Search jobs by requirements, location..."
               value={searchText}
               onChangeText={setSearchText}
               style={styles.searchInput}
@@ -809,7 +813,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   brandTitle: {
-    fontSize: 22,
+    fontSize: 18, // Reduced from 22
     fontWeight: '800',
     color: '#4F46E5',
     textAlign: 'center',

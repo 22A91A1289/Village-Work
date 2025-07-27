@@ -128,7 +128,7 @@ const CreateJobScreen = ({ navigation }) => {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Create New Job</Text>
           <Text style={styles.headerSubtitle}>
-            Post a job for helpers or experienced workers
+            Post a job based on your specific requirements and experience needs
           </Text>
         </View>
 
@@ -240,6 +240,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+    paddingTop: 20, // Increased top padding to avoid collision with header
   },
   header: {
     backgroundColor: '#FFFFFF',

@@ -348,7 +348,7 @@
 //                   <View style={styles.featureTag}>
 //                     <Ionicons name="school" size={12} color="#4F46E5" />
 //                     <Text style={styles.featureText}>Training Provided</Text>
-//                   </View>
+//                 </View>
 //                 )}
 //               </View>
 
@@ -803,6 +803,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const dailyWorkCategories = [
   { name: 'Farming', icon: 'leaf', color: '#10B981', hasSkillLevels: false },
@@ -881,7 +882,9 @@ const HomeScreen = ({ navigation }) => {
   const [jobs, setJobs] = useState(nearbyJobs);
   const [skillModalVisible, setSkillModalVisible] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
-  const [userSkillLevel, setUserSkillLevel] = useState('beginner');
+  const [userSkillLevel, setUserSkillLevel] = useState('helper');
+  const [skillAssessmentCompleted, setSkillAssessmentCompleted] = useState(false);
+  const [testStatus, setTestStatus] = useState(null);
 
   const fetchLocation = async () => {
     try {
@@ -953,7 +956,7 @@ const HomeScreen = ({ navigation }) => {
   const handleSkillAssessment = (skillLevel) => {
     setSkillModalVisible(false);
     
-    if (selectedJob.skillLevel === 'expert' && skillLevel === 'beginner') {
+    if (selectedJob.skillLevel === 'expert' && skillLevel === 'helper') {
       Alert.alert(
         'Skill Level Mismatch',
         'This job requires expert level skills. Would you like to apply for a training position instead?',
@@ -963,7 +966,7 @@ const HomeScreen = ({ navigation }) => {
             text: 'Find Training Jobs',
             onPress: () => navigation.navigate('CategoryJobs', {
               categoryName: 'Training Programs',
-              skillLevel: 'beginner'
+              skillLevel: 'helper'
             })
           }
         ]
@@ -971,7 +974,7 @@ const HomeScreen = ({ navigation }) => {
       return;
     }
 
-    if (selectedJob.requiresSkillTest && skillLevel !== 'beginner') {
+    if (selectedJob.requiresSkillTest && skillLevel !== 'helper') {
       Alert.alert(
         'Skill Test Required',
         `This job requires a skill test. You'll be connected with a nearby ${selectedJob.type.toLowerCase()} expert for assessment.`,
@@ -1014,8 +1017,8 @@ const HomeScreen = ({ navigation }) => {
 
   const getSkillLevelColor = (level) => {
     switch (level) {
-      case 'beginner': return '#10B981';
-      case 'intermediate': return '#F59E0B';
+      case 'helper': return '#10B981';
+      case 'worker': return '#3B82F6';
       case 'expert': return '#EF4444';
       default: return '#6B7280';
     }
@@ -1023,17 +1026,66 @@ const HomeScreen = ({ navigation }) => {
 
   const getSkillLevelText = (level) => {
     switch (level) {
-      case 'beginner': return 'Beginner Friendly';
-      case 'intermediate': return 'Some Experience Required';
-      case 'expert': return 'Expert Level';
-      case 'any': return 'All Levels Welcome';
+      case 'helper': return 'Helper';
+      case 'worker': return 'Worker';
+      case 'expert': return 'Expert';
       default: return 'Any Level';
     }
   };
 
   useEffect(() => {
+    loadUserData();
     fetchLocation();
   }, []);
+
+  const loadUserData = async () => {
+    try {
+      const skillLevel = await AsyncStorage.getItem('userSkillLevel');
+      const testStatusValue = await AsyncStorage.getItem('testStatus');
+      
+      console.log('HomeScreen - Skill Level:', skillLevel);
+      console.log('HomeScreen - Test Status:', testStatusValue);
+      
+      setUserSkillLevel(skillLevel || 'new');
+      setTestStatus(testStatusValue);
+      setSkillAssessmentCompleted(true);
+      
+      // Filter jobs based on skill level and test status
+      filterJobsBySkillLevel(skillLevel, testStatusValue);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+
+
+  const filterJobsBySkillLevel = (skillLevel, testStatus) => {
+    let filteredJobs = [...nearbyJobs];
+    
+    console.log('Filtering jobs for skill level:', skillLevel, 'test status:', testStatus);
+    
+    if (skillLevel === 'new') {
+      // New users see only daily work and helper jobs
+      filteredJobs = filteredJobs.filter(job => 
+        job.type === 'Daily Work' || job.skillLevel === 'any'
+      );
+      console.log('New user - showing', filteredJobs.length, 'jobs');
+    } else if (skillLevel === 'experienced') {
+      if (testStatus === 'passed') {
+        // Experienced users who passed test see all jobs
+        filteredJobs = nearbyJobs;
+        console.log('Experienced user (passed) - showing all jobs');
+      } else if (testStatus === 'pending' || testStatus === 'skipped') {
+        // Experienced users with pending/skipped test see helper jobs and daily work
+        filteredJobs = filteredJobs.filter(job => 
+          job.type === 'Daily Work' || job.skillLevel === 'any' || job.skillLevel === 'helper'
+        );
+        console.log('Experienced user (pending/skipped) - showing', filteredJobs.length, 'jobs');
+      }
+    }
+    
+    setJobs(filteredJobs);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1048,8 +1100,8 @@ const HomeScreen = ({ navigation }) => {
           </Text>
         </View>
         <View style={styles.headerCenter}>
-          <Text style={styles.brandTitle}>VillageWork</Text>
-          <Text style={styles.brandSubtitle}>All Skill Levels</Text>
+          <Text style={styles.brandTitle}>VWork</Text>
+          <Text style={styles.brandSubtitle}>Quality Work Opportunities</Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.notificationButton} onPress={() => setNotifications(0)}>
@@ -1069,7 +1121,7 @@ const HomeScreen = ({ navigation }) => {
           <Ionicons name="search" size={20} color="#9CA3AF" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search jobs by skill level, location..."
+            placeholder="Search jobs by requirements, location..."
             value={searchText}
             onChangeText={setSearchText}
             onFocus={() => navigation.navigate('Search')}
@@ -1081,35 +1133,76 @@ const HomeScreen = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Skill Level Selection Card */}
+        {/* Skill Status Card */}
         <View style={styles.skillCard}>
           <View style={styles.skillHeader}>
             <Ionicons name="school" size={24} color="#4F46E5" />
-            <Text style={styles.skillTitle}>Choose Your Experience Level</Text>
+            <Text style={styles.skillTitle}>Your Skill Status</Text>
           </View>
-          <Text style={styles.skillSubtitle}>
-            We'll show you the most suitable jobs based on your skills
-          </Text>
-          <View style={styles.skillLevels}>
-            {['beginner', 'intermediate', 'expert'].map((level) => (
-              <TouchableOpacity
-                key={level}
-                style={[
-                  styles.skillLevelButton,
-                  userSkillLevel === level && styles.selectedSkillLevel,
-                  { borderColor: getSkillLevelColor(level) }
-                ]}
-                onPress={() => setUserSkillLevel(level)}
-              >
-                <Text style={[
-                  styles.skillLevelText,
-                  userSkillLevel === level && { color: getSkillLevelColor(level) }
-                ]}>
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          
+          {userSkillLevel === 'new' ? (
+            <View style={styles.statusContainer}>
+              <View style={styles.statusBadge}>
+                <Ionicons name="person-add" size={16} color="#10B981" />
+                <Text style={styles.statusText}>New Worker</Text>
+              </View>
+              <Text style={styles.statusDescription}>
+                You can access daily work and helper jobs. Great for beginners!
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.statusContainer}>
+              <View style={styles.statusBadge}>
+                <Ionicons name="construct" size={16} color="#4F46E5" />
+                <Text style={styles.statusText}>Experienced Worker</Text>
+              </View>
+              {testStatus === 'pending' && (
+                <View style={styles.testStatusContainer}>
+                  <View style={styles.testStatusBadge}>
+                    <Ionicons name="time" size={14} color="#F59E0B" />
+                    <Text style={styles.testStatusText}>Test Scheduled</Text>
+                  </View>
+                  <Text style={styles.testStatusDescription}>
+                    Your skill test is scheduled. You can access helper jobs while waiting.
+                  </Text>
+                  <TouchableOpacity 
+                    style={styles.testStatusButton}
+                    onPress={() => navigation.navigate('TestStatus')}
+                  >
+                    <Text style={styles.testStatusButtonText}>Check Test Status</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {testStatus === 'skipped' && (
+                <View style={styles.testStatusContainer}>
+                  <View style={styles.testStatusBadge}>
+                    <Ionicons name="alert-circle" size={14} color="#6B7280" />
+                    <Text style={styles.testStatusText}>Test Skipped</Text>
+                  </View>
+                  <Text style={styles.testStatusDescription}>
+                    You can take the skill test anytime to access expert-level jobs.
+                  </Text>
+                  <TouchableOpacity 
+                    style={styles.testStatusButton}
+                    onPress={() => navigation.navigate('SkillAssessment')}
+                  >
+                    <Text style={styles.testStatusButtonText}>Take Test Now</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {testStatus === 'passed' && (
+                <View style={styles.testStatusContainer}>
+                  <View style={styles.testStatusBadge}>
+                    <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                    <Text style={styles.testStatusText}>Test Passed</Text>
+                  </View>
+                  <Text style={styles.testStatusDescription}>
+                    Congratulations! You can access all job levels including expert positions.
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Quick Stats */}
@@ -1300,8 +1393,8 @@ const HomeScreen = ({ navigation }) => {
             
             <View style={styles.modalSkillLevels}>
               {[
-                { level: 'beginner', description: 'New to this field, willing to learn' },
-                { level: 'intermediate', description: 'Have some experience, can work independently' },
+                { level: 'helper', description: 'New to this field, willing to learn' },
+                { level: 'worker', description: 'Have some experience, can work independently' },
                 { level: 'expert', description: 'Highly experienced, can handle complex tasks' }
               ].map((skill) => (
                 <TouchableOpacity
@@ -1366,7 +1459,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   brandTitle: {
-    fontSize: 22,
+    fontSize: 18, // Reduced from 22
     fontWeight: '800',
     color: '#1F2937',
     textAlign: 'center',
@@ -1478,6 +1571,67 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#6B7280',
+  },
+  statusContainer: {
+    marginTop: 8,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#047857',
+    marginLeft: 6,
+  },
+  statusDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+  },
+  testStatusContainer: {
+    marginTop: 12,
+  },
+  testStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFBEB',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  testStatusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#92400E',
+    marginLeft: 4,
+  },
+  testStatusDescription: {
+    fontSize: 13,
+    color: '#6B7280',
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  testStatusButton: {
+    backgroundColor: '#4F46E5',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  testStatusButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   statsContainer: {
     flexDirection: 'row',

@@ -1,508 +1,3 @@
-// import React from 'react';
-// import { View, Text, Image, TouchableOpacity } from 'react-native';
-
-// const ProfileScreen = () => {
-//   return (
-//     <View style={{ flex: 1, backgroundColor: '#fff', padding: 16 }}>
-//       <View style={{ alignItems: 'center', marginTop: 32 }}>
-//         <Image
-//           source={require('../assets/favicon.png')}
-//           style={{ width: 96, height: 96, borderRadius: 999 }}
-//         />
-//         <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1F2937', marginTop: 8 }}>Venkata Siva Rama Raju</Text>
-//         <Text style={{ fontSize: 14, color: '#6B7280' }}>Full Stack Developer</Text>
-//       </View>
-
-//       <View style={{ backgroundColor: '#F9FAFB', borderRadius: 20, padding: 16, marginTop: 24, borderWidth: 1, borderColor: '#E5E7EB' }}>
-//         <Text style={{ color: '#6B7280', fontSize: 14 }}>Email</Text>
-//         <Text style={{ color: '#111827', fontWeight: '600', marginTop: 4 }}>venkata@example.com</Text>
-
-//         <Text style={{ color: '#6B7280', fontSize: 14, marginTop: 16 }}>Phone</Text>
-//         <Text style={{ color: '#111827', fontWeight: '600', marginTop: 4 }}>+91 9876543210</Text>
-
-//         <Text style={{ color: '#6B7280', fontSize: 14, marginTop: 16 }}>Location</Text>
-//         <Text style={{ color: '#111827', fontWeight: '600', marginTop: 4 }}>Rajam, Andhra Pradesh</Text>
-//       </View>
-
-//       <View style={{ marginTop: 24 }}>
-//         <TouchableOpacity style={{ backgroundColor: '#4F46E5', paddingVertical: 12, borderRadius: 999, alignItems: 'center' }}>
-//           <Text style={{ color: '#fff', fontWeight: '600' }}>Edit Profile</Text>
-//         </TouchableOpacity>
-//         <TouchableOpacity style={{ backgroundColor: '#FEE2E2', paddingVertical: 12, borderRadius: 999, alignItems: 'center', marginTop: 12 }}>
-//           <Text style={{ color: '#EF4444', fontWeight: '600' }}>Logout</Text>
-//         </TouchableOpacity>
-//       </View>
-//     </View>
-//   );
-// };
-
-// export default ProfileScreen;
-// ProfileScreen.js
-// ProfileScreen.js
-// import React, { useState } from 'react';
-// import {
-//   SafeAreaView,
-//   ScrollView,
-//   View,
-//   Text,
-//   Image,
-//   TouchableOpacity,
-//   StyleSheet,
-//   Alert,
-//   StatusBar,
-// } from 'react-native';
-// import { Ionicons } from '@expo/vector-icons';
-
-// const ProfileScreen = ({ navigation }) => {
-//   const [isOnline, setIsOnline] = useState(true);
-//   const [availableForWork, setAvailableForWork] = useState(true);
-
-//   const handleEditProfile = () => {
-//     Alert.alert('Edit Profile', 'Navigate to edit profile screen', [
-//       { text: 'OK', onPress: () => console.log('Edit profile pressed') }
-//     ]);
-//   };
-
-//   const handleLogout = () => {
-//     Alert.alert(
-//       'Logout',
-//       'Are you sure you want to logout?',
-//       [
-//         { text: 'Cancel', style: 'cancel' },
-//         { 
-//           text: 'Logout', 
-//           style: 'destructive', 
-//           onPress: () => {
-//             console.log('Logged out');
-//             // Add logout logic here
-//           }
-//         }
-//       ]
-//     );
-//   };
-
-//   const handleStatusToggle = () => {
-//     setIsOnline(!isOnline);
-//   };
-
-//   const handleWorkAvailabilityToggle = () => {
-//     setAvailableForWork(!availableForWork);
-//   };
-
-//   const handleCallPress = () => {
-//     Alert.alert('Call', 'Calling +91 9876543210...');
-//   };
-
-//   const handleEmailPress = () => {
-//     Alert.alert('Email', 'Opening email client...');
-//   };
-
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
-      
-//       {/* Header */}
-//       <View style={styles.header}>
-//         <Text style={styles.headerTitle}>My Profile</Text>
-//         <TouchableOpacity onPress={handleStatusToggle}>
-//           <View style={[styles.statusIndicator, { backgroundColor: isOnline ? '#48bb78' : '#f56565' }]}>
-//             <Text style={styles.statusText}>{isOnline ? 'Online' : 'Offline'}</Text>
-//           </View>
-//         </TouchableOpacity>
-//       </View>
-
-//       <ScrollView showsVerticalScrollIndicator={false}>
-//         {/* Profile Picture Section */}
-//         <View style={styles.profileSection}>
-//           <View style={styles.avatarContainer}>
-//             <Image
-//               source={{ uri: 'https://via.placeholder.com/120x120/4299e1/ffffff?text=VS' }}
-//               style={styles.avatar}
-//             />
-//             <View style={[styles.onlineIndicator, { backgroundColor: isOnline ? '#48bb78' : '#f56565' }]} />
-//           </View>
-//           <Text style={styles.name}>Venkata Siva Rama Raju</Text>
-//           <Text style={styles.role}>Full Stack Developer</Text>
-//           <Text style={styles.experience}>3+ Years Experience</Text>
-//         </View>
-
-//         {/* Quick Stats */}
-//         <View style={styles.statsContainer}>
-//           <View style={styles.statItem}>
-//             <Ionicons name="briefcase" size={20} color="#4299e1" />
-//             <Text style={styles.statNumber}>24</Text>
-//             <Text style={styles.statLabel}>Projects Completed</Text>
-//           </View>
-//           <View style={styles.statItem}>
-//             <Ionicons name="star" size={20} color="#fbbf24" />
-//             <Text style={styles.statNumber}>4.8</Text>
-//             <Text style={styles.statLabel}>Rating</Text>
-//           </View>
-//           <View style={styles.statItem}>
-//             <Ionicons name="trending-up" size={20} color="#10b981" />
-//             <Text style={styles.statNumber}>92%</Text>
-//             <Text style={styles.statLabel}>Success Rate</Text>
-//           </View>
-//         </View>
-
-//         {/* Work Availability Toggle */}
-//         <View style={styles.availabilitySection}>
-//           <View style={styles.availabilityHeader}>
-//             <Text style={styles.sectionTitle}>Work Availability</Text>
-//             <TouchableOpacity onPress={handleWorkAvailabilityToggle}>
-//               <View style={[styles.toggle, { backgroundColor: availableForWork ? '#48bb78' : '#d1d5db' }]}>
-//                 <View style={[styles.toggleCircle, { 
-//                   transform: [{ translateX: availableForWork ? 20 : 2 }] 
-//                 }]} />
-//               </View>
-//             </TouchableOpacity>
-//           </View>
-//           <Text style={styles.availabilityText}>
-//             {availableForWork ? 'Available for new projects' : 'Currently unavailable'}
-//           </Text>
-//         </View>
-
-//         {/* Contact Information */}
-//         <View style={styles.section}>
-//           <Text style={styles.sectionTitle}>Contact Information</Text>
-          
-//           <TouchableOpacity style={styles.infoItem} onPress={handleEmailPress}>
-//             <Ionicons name="mail" size={20} color="#4299e1" />
-//             <View style={styles.infoContent}>
-//               <Text style={styles.infoLabel}>Email</Text>
-//               <Text style={styles.infoValue}>venkata@example.com</Text>
-//             </View>
-//             <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
-//           </TouchableOpacity>
-
-//           <TouchableOpacity style={styles.infoItem} onPress={handleCallPress}>
-//             <Ionicons name="call" size={20} color="#4299e1" />
-//             <View style={styles.infoContent}>
-//               <Text style={styles.infoLabel}>Phone</Text>
-//               <Text style={styles.infoValue}>+91 9876543210</Text>
-//             </View>
-//             <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
-//           </TouchableOpacity>
-
-//           <View style={styles.infoItem}>
-//             <Ionicons name="location" size={20} color="#4299e1" />
-//             <View style={styles.infoContent}>
-//               <Text style={styles.infoLabel}>Location</Text>
-//               <Text style={styles.infoValue}>Rajam, Andhra Pradesh</Text>
-//             </View>
-//           </View>
-//         </View>
-
-//         {/* Skills Section */}
-//         <View style={styles.section}>
-//           <Text style={styles.sectionTitle}>Skills & Expertise</Text>
-//           <View style={styles.skillsContainer}>
-//             {['React Native', 'JavaScript', 'Node.js', 'MongoDB', 'Firebase', 'Express.js'].map((skill, index) => (
-//               <View key={index} style={styles.skillTag}>
-//                 <Text style={styles.skillText}>{skill}</Text>
-//               </View>
-//             ))}
-//           </View>
-//         </View>
-
-//         {/* Work Preferences */}
-//         <View style={styles.section}>
-//           <Text style={styles.sectionTitle}>Work Preferences</Text>
-//           <View style={styles.preferencesContainer}>
-//             <View style={styles.preferenceItem}>
-//               <Ionicons name="time" size={18} color="#6b7280" />
-//               <Text style={styles.preferenceLabel}>Work Type</Text>
-//               <Text style={styles.preferenceValue}>Full-time / Contract</Text>
-//             </View>
-//             <View style={styles.preferenceItem}>
-//               <Ionicons name="cash" size={18} color="#6b7280" />
-//               <Text style={styles.preferenceLabel}>Hourly Rate</Text>
-//               <Text style={styles.preferenceValue}>₹2000 - ₹3000</Text>
-//             </View>
-//             <View style={styles.preferenceItem}>
-//               <Ionicons name="calendar" size={18} color="#6b7280" />
-//               <Text style={styles.preferenceLabel}>Availability</Text>
-//               <Text style={styles.preferenceValue}>Monday - Saturday</Text>
-//             </View>
-//           </View>
-//         </View>
-
-//         {/* Action Buttons */}
-//         <View style={styles.buttonContainer}>
-//           <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
-//             <Ionicons name="create" size={20} color="#ffffff" />
-//             <Text style={styles.buttonText}>Edit Profile</Text>
-//           </TouchableOpacity>
-
-//           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-//             <Ionicons name="log-out" size={20} color="#ffffff" />
-//             <Text style={styles.buttonText}>Logout</Text>
-//           </TouchableOpacity>
-//         </View>
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#f7fafc',
-//   },
-//   header: {
-//     backgroundColor: '#1a365d',
-//     paddingHorizontal: 20,
-//     paddingVertical: 15,
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     elevation: 4,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//   },
-//   headerTitle: {
-//     color: '#ffffff',
-//     fontSize: 20,
-//     fontWeight: 'bold',
-//   },
-//   statusIndicator: {
-//     paddingHorizontal: 12,
-//     paddingVertical: 6,
-//     borderRadius: 15,
-//   },
-//   statusText: {
-//     color: '#ffffff',
-//     fontSize: 12,
-//     fontWeight: '600',
-//   },
-//   profileSection: {
-//     alignItems: 'center',
-//     paddingVertical: 30,
-//     backgroundColor: '#ffffff',
-//     marginBottom: 16,
-//     elevation: 2,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 2,
-//   },
-//   avatarContainer: {
-//     position: 'relative',
-//     marginBottom: 15,
-//   },
-//   avatar: {
-//     width: 120,
-//     height: 120,
-//     borderRadius: 60,
-//     borderWidth: 4,
-//     borderColor: '#4299e1',
-//   },
-//   onlineIndicator: {
-//     position: 'absolute',
-//     bottom: 8,
-//     right: 8,
-//     width: 20,
-//     height: 20,
-//     borderRadius: 10,
-//     borderWidth: 3,
-//     borderColor: '#ffffff',
-//   },
-//   name: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     color: '#2d3748',
-//     marginBottom: 5,
-//   },
-//   role: {
-//     fontSize: 16,
-//     color: '#4299e1',
-//     fontWeight: '600',
-//     marginBottom: 5,
-//   },
-//   experience: {
-//     fontSize: 14,
-//     color: '#718096',
-//   },
-//   statsContainer: {
-//     flexDirection: 'row',
-//     backgroundColor: '#ffffff',
-//     marginBottom: 16,
-//     paddingVertical: 20,
-//     paddingHorizontal: 16,
-//     justifyContent: 'space-around',
-//     elevation: 2,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 2,
-//   },
-//   statItem: {
-//     alignItems: 'center',
-//   },
-//   statNumber: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     color: '#2d3748',
-//     marginTop: 5,
-//   },
-//   statLabel: {
-//     fontSize: 12,
-//     color: '#718096',
-//     marginTop: 5,
-//     textAlign: 'center',
-//   },
-//   availabilitySection: {
-//     backgroundColor: '#ffffff',
-//     marginBottom: 16,
-//     padding: 20,
-//     elevation: 2,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 2,
-//   },
-//   availabilityHeader: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 8,
-//   },
-//   toggle: {
-//     width: 44,
-//     height: 24,
-//     borderRadius: 12,
-//     justifyContent: 'center',
-//     paddingHorizontal: 2,
-//   },
-//   toggleCircle: {
-//     width: 20,
-//     height: 20,
-//     borderRadius: 10,
-//     backgroundColor: '#ffffff',
-//   },
-//   availabilityText: {
-//     fontSize: 14,
-//     color: '#718096',
-//   },
-//   section: {
-//     backgroundColor: '#ffffff',
-//     marginBottom: 16,
-//     padding: 20,
-//     elevation: 2,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 2,
-//   },
-//   sectionTitle: {
-//     fontSize: 18,
-//     fontWeight: 'bold',
-//     color: '#2d3748',
-//     marginBottom: 15,
-//   },
-//   infoItem: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     paddingVertical: 12,
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#e2e8f0',
-//   },
-//   infoContent: {
-//     marginLeft: 15,
-//     flex: 1,
-//   },
-//   infoLabel: {
-//     fontSize: 12,
-//     color: '#718096',
-//     marginBottom: 2,
-//   },
-//   infoValue: {
-//     fontSize: 16,
-//     color: '#2d3748',
-//     fontWeight: '500',
-//   },
-//   skillsContainer: {
-//     flexDirection: 'row',
-//     flexWrap: 'wrap',
-//   },
-//   skillTag: {
-//     backgroundColor: '#ebf8ff',
-//     paddingHorizontal: 12,
-//     paddingVertical: 6,
-//     borderRadius: 15,
-//     marginRight: 8,
-//     marginBottom: 8,
-//     borderWidth: 1,
-//     borderColor: '#bee3f8',
-//   },
-//   skillText: {
-//     color: '#2b6cb0',
-//     fontSize: 12,
-//     fontWeight: '600',
-//   },
-//   preferencesContainer: {
-//     backgroundColor: '#f7fafc',
-//     borderRadius: 10,
-//     padding: 15,
-//   },
-//   preferenceItem: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     paddingVertical: 8,
-//   },
-//   preferenceLabel: {
-//     fontSize: 14,
-//     color: '#718096',
-//     marginLeft: 10,
-//     flex: 1,
-//   },
-//   preferenceValue: {
-//     fontSize: 14,
-//     color: '#2d3748',
-//     fontWeight: '500',
-//   },
-//   buttonContainer: {
-//     padding: 20,
-//     paddingBottom: 40,
-//   },
-//   editButton: {
-//     backgroundColor: '#4299e1',
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     paddingVertical: 15,
-//     borderRadius: 12,
-//     marginBottom: 15,
-//     elevation: 2,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//   },
-//   logoutButton: {
-//     backgroundColor: '#e53e3e',
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     paddingVertical: 15,
-//     borderRadius: 12,
-//     elevation: 2,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//   },
-//   buttonText: {
-//     color: '#ffffff',
-//     fontSize: 16,
-//     fontWeight: '600',
-//     marginLeft: 8,
-//   },
-// });
-
-// export default ProfileScreen;
 import React, { useState } from 'react';
 import {
   SafeAreaView,
@@ -514,74 +9,259 @@ import {
   StyleSheet,
   Alert,
   StatusBar,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const ProfileScreen = ({ navigation }) => {
   const [isOnline, setIsOnline] = useState(true);
   const [availableForWork, setAvailableForWork] = useState(true);
-  const [notifications, setNotifications] = useState(2);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [notifications, setNotifications] = useState(3);
+
+  const [profileData, setProfileData] = useState({
+    name: 'Venkata Siva Rama Raju',
+    email: 'venkata@example.com',
+    phone: '+91 9876543210',
+    location: 'Rajam, Andhra Pradesh',
+    experience: '3+ Years',
+    workerType: 'Experienced Worker',
+    bio: 'Skilled worker with expertise in construction, electrical work, and general maintenance. Reliable and hardworking with excellent problem-solving skills.',
+    hourlyRate: '₹2000 - ₹3000',
+    availability: 'Monday - Saturday',
+    workType: 'Full-time / Contract',
+  });
+
+  const [tempProfileData, setTempProfileData] = useState(profileData);
+
+  const workerSkills = [
+    { name: 'Construction', level: 'Expert', icon: 'hammer', color: '#10B981' },
+    { name: 'Electrical Work', level: 'Advanced', icon: 'flash', color: '#F59E0B' },
+    { name: 'Plumbing', level: 'Intermediate', icon: 'water', color: '#3B82F6' },
+    { name: 'Carpentry', level: 'Advanced', icon: 'construct', color: '#8B5CF6' },
+    { name: 'Painting', level: 'Intermediate', icon: 'color-palette', color: '#EF4444' },
+    { name: 'General Maintenance', level: 'Expert', icon: 'build', color: '#06B6D4' },
+  ];
+
+  const workStats = [
+    { icon: 'briefcase', label: 'Jobs Completed', value: '156', color: '#10B981' },
+    { icon: 'star', label: 'Rating', value: '4.8', color: '#F59E0B' },
+    { icon: 'time', label: 'Response Time', value: '< 1hr', color: '#3B82F6' },
+    { icon: 'cash', label: 'Earnings', value: '₹2.4L', color: '#8B5CF6' },
+  ];
+
+  const recentJobs = [
+    {
+      id: 1,
+      title: 'House Construction Helper',
+      employer: 'Kumar Enterprises',
+      duration: '2 months',
+      rating: 5,
+      earnings: '₹45,000',
+      status: 'completed',
+    },
+    {
+      id: 2,
+      title: 'Electrical Installation',
+      employer: 'Tech Solutions',
+      duration: '3 weeks',
+      rating: 4,
+      earnings: '₹28,000',
+      status: 'completed',
+    },
+    {
+      id: 3,
+      title: 'Office Renovation',
+      employer: 'City Builders',
+      duration: '1 month',
+      rating: 5,
+      earnings: '₹32,000',
+      status: 'completed',
+    },
+  ];
+
+  const menuItems = [
+    {
+      icon: 'document-text-outline',
+      title: 'My Applications',
+      subtitle: 'Track your job applications',
+      badge: '5 Pending',
+      onPress: () => Alert.alert('Applications', 'View your job applications'),
+    },
+    {
+      icon: 'briefcase-outline',
+      title: 'Work History',
+      subtitle: 'Past jobs and earnings',
+      onPress: () => Alert.alert('Work History', 'View your completed jobs'),
+    },
+    {
+      icon: 'wallet-outline',
+      title: 'Earnings & Payments',
+      subtitle: 'Payment history and methods',
+      onPress: () => Alert.alert('Payments', 'Manage your earnings and payments'),
+    },
+    {
+      icon: 'shield-checkmark-outline',
+      title: 'Skills Assessment',
+      subtitle: 'Take skill tests to improve rating',
+      onPress: () => navigation.navigate('SkillAssessment'),
+    },
+    {
+      icon: 'notifications-outline',
+      title: 'Job Alerts',
+      subtitle: 'Get notified about new jobs',
+      onPress: () => Alert.alert('Job Alerts', 'Configure job notifications'),
+    },
+    {
+      icon: 'settings-outline',
+      title: 'Settings',
+      subtitle: 'Privacy and preferences',
+      onPress: () => Alert.alert('Settings', 'Manage your account settings'),
+    },
+    {
+      icon: 'help-circle-outline',
+      title: 'Help & Support',
+      subtitle: 'Get help and contact support',
+      onPress: () => Alert.alert('Support', 'Get help and contact support'),
+    },
+  ];
 
   const handleEditProfile = () => {
-    navigation.navigate('EditProfile');
+    setIsEditModalVisible(true);
+  };
+
+  const handleSaveProfile = () => {
+    setProfileData(tempProfileData);
+    setIsEditModalVisible(false);
+    Alert.alert('✓ Success', 'Your profile has been updated successfully!');
   };
 
   const handleLogout = () => {
     Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
+      'Confirm Logout',
+      'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Logout', 
+          text: 'Sign Out',
           style: 'destructive', 
           onPress: () => {
-            Alert.alert('Logged out', 'You have been logged out successfully');
-            // Add logout logic here
-          }
-        }
+            Alert.alert('Logged Out', 'You have been logged out successfully');
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'RoleSelection' }],
+            });
+          },
+        },
       ]
     );
   };
 
-  const handleStatusToggle = () => {
-    setIsOnline(!isOnline);
-  };
-
   const handleWorkAvailabilityToggle = () => {
     setAvailableForWork(!availableForWork);
-  };
-
-  const handleCallPress = () => {
-    Alert.alert('Call', 'Calling +91 9876543210...');
-  };
-
-  const handleEmailPress = () => {
-    Alert.alert('Email', 'Opening email client...');
+    Alert.alert(
+      'Availability Updated',
+      availableForWork ? 'You are now unavailable for work' : 'You are now available for work'
+    );
   };
 
   const handleNotificationPress = () => {
     setNotifications(0);
-    navigation.navigate('Notifications');
+    Alert.alert('Notifications', 'View your notifications');
   };
 
-  const handleSettings = () => {
-    navigation.navigate('Settings');
-  };
+  const EditProfileModal = () => (
+    <Modal
+      visible={isEditModalVisible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+    >
+      <SafeAreaView style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
+            <Text style={styles.modalCancelText}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Edit Profile</Text>
+          <TouchableOpacity onPress={handleSaveProfile}>
+            <Text style={styles.modalSaveText}>Save</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <ScrollView style={styles.modalContent}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Full Name</Text>
+            <TextInput
+              style={styles.textInput}
+              value={tempProfileData.name}
+              onChangeText={(text) => setTempProfileData({...tempProfileData, name: text})}
+              placeholder="Enter your full name"
+            />
+          </View>
 
-  const handleMyApplications = () => {
-    navigation.navigate('MyApplications');
-  };
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email Address</Text>
+            <TextInput
+              style={styles.textInput}
+              value={tempProfileData.email}
+              onChangeText={(text) => setTempProfileData({...tempProfileData, email: text})}
+              placeholder="Enter email address"
+              keyboardType="email-address"
+            />
+          </View>
 
-  const handleSavedJobs = () => {
-    navigation.navigate('SavedJobs');
-  };
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Phone Number</Text>
+            <TextInput
+              style={styles.textInput}
+              value={tempProfileData.phone}
+              onChangeText={(text) => setTempProfileData({...tempProfileData, phone: text})}
+              placeholder="Enter phone number"
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Location</Text>
+            <TextInput
+              style={styles.textInput}
+              value={tempProfileData.location}
+              onChangeText={(text) => setTempProfileData({...tempProfileData, location: text})}
+              placeholder="City, State"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Hourly Rate (₹)</Text>
+            <TextInput
+              style={styles.textInput}
+              value={tempProfileData.hourlyRate}
+              onChangeText={(text) => setTempProfileData({...tempProfileData, hourlyRate: text})}
+              placeholder="e.g., ₹2000 - ₹3000"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>About Your Skills</Text>
+            <TextInput
+              style={[styles.textInput, styles.textArea]}
+              value={tempProfileData.bio}
+              onChangeText={(text) => setTempProfileData({...tempProfileData, bio: text})}
+              placeholder="Describe your skills and experience"
+              multiline={true}
+              numberOfLines={4}
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
       
-      {/* Header matching HomeScreen */}
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -606,81 +286,107 @@ const ProfileScreen = ({ navigation }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
-        {/* Profile Picture Section */}
+        {/* Profile Header */}
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={{ uri: 'https://via.placeholder.com/120x120/4299e1/ffffff?text=VS' }}
+              source={{ uri: 'https://via.placeholder.com/120x120/4F46E5/ffffff?text=VS' }}
               style={styles.avatar}
             />
             <View style={[styles.onlineIndicator, { backgroundColor: isOnline ? '#10B981' : '#EF4444' }]} />
           </View>
-          <Text style={styles.name}>Venkata Siva Rama Raju</Text>
-          <Text style={styles.role}>Full Stack Developer</Text>
-          <Text style={styles.experience}>3+ Years Experience</Text>
-        </View>
-
-        {/* Quick Stats matching HomeScreen */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Ionicons name="briefcase" size={18} color="#10B981" />
-            <Text style={styles.statNumber}>24</Text>
-            <Text style={styles.statLabel}>Projects</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Ionicons name="star" size={18} color="#F59E0B" />
-            <Text style={styles.statNumber}>4.8</Text>
-            <Text style={styles.statLabel}>Rating</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Ionicons name="trending-up" size={18} color="#3B82F6" />
-            <Text style={styles.statNumber}>92%</Text>
-            <Text style={styles.statLabel}>Success Rate</Text>
-          </View>
-        </View>
-
-        {/* Work Availability Toggle */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitleMain}>Work Availability</Text>
+          <Text style={styles.name}>{profileData.name}</Text>
+          <Text style={styles.role}>{profileData.workerType}</Text>
+          <Text style={styles.experience}>{profileData.experience} Experience</Text>
+          
+          {/* Availability Toggle */}
+          <View style={styles.availabilityContainer}>
+            <Text style={styles.availabilityLabel}>Available for Work</Text>
             <TouchableOpacity onPress={handleWorkAvailabilityToggle}>
-              <View style={[styles.toggle, { backgroundColor: availableForWork ? '#10B981' : '#d1d5db' }]}>
+              <View style={[styles.toggle, { backgroundColor: availableForWork ? '#10B981' : '#D1D5DB' }]}>
                 <View style={[styles.toggleCircle, { 
                   transform: [{ translateX: availableForWork ? 20 : 2 }] 
                 }]} />
               </View>
             </TouchableOpacity>
           </View>
-          <Text style={styles.availabilityText}>
-            {availableForWork ? 'Available for new projects' : 'Currently unavailable'}
-          </Text>
+        </View>
+
+        {/* Work Stats */}
+        <View style={styles.statsContainer}>
+          {workStats.map((stat, index) => (
+            <View key={index} style={styles.statCard}>
+              <View style={[styles.statIcon, { backgroundColor: `${stat.color}15` }]}>
+                <Ionicons name={stat.icon} size={20} color={stat.color} />
+          </View>
+              <Text style={styles.statValue}>{stat.value}</Text>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+          </View>
+          ))}
+        </View>
+
+        {/* Skills Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Skills & Expertise</Text>
+          <View style={styles.skillsGrid}>
+            {workerSkills.map((skill, index) => (
+              <View key={index} style={styles.skillCard}>
+                <View style={[styles.skillIcon, { backgroundColor: `${skill.color}15` }]}>
+                  <Ionicons name={skill.icon} size={20} color={skill.color} />
+                </View>
+                <Text style={styles.skillName}>{skill.name}</Text>
+                <Text style={styles.skillLevel}>{skill.level}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Recent Work */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recent Work</Text>
+          {recentJobs.map((job, index) => (
+            <View key={job.id} style={styles.jobCard}>
+              <View style={styles.jobHeader}>
+                <Text style={styles.jobTitle}>{job.title}</Text>
+                <View style={styles.ratingContainer}>
+                  <Ionicons name="star" size={14} color="#F59E0B" />
+                  <Text style={styles.ratingText}>{job.rating}</Text>
+              </View>
+          </View>
+              <Text style={styles.employerName}>{job.employer}</Text>
+              <View style={styles.jobDetails}>
+                <Text style={styles.jobDuration}>{job.duration}</Text>
+                <Text style={styles.jobEarnings}>₹{job.earnings}</Text>
+              </View>
+            </View>
+          ))}
         </View>
 
         {/* Contact Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitleMain}>Contact Information</Text>
+          <Text style={styles.sectionTitle}>Contact Information</Text>
           
-          <TouchableOpacity style={styles.infoCard} onPress={handleEmailPress}>
+          <TouchableOpacity style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <View style={styles.infoIconContainer}>
                 <Ionicons name="mail" size={20} color="#4F46E5" />
               </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Email</Text>
-                <Text style={styles.infoValue}>venkata@example.com</Text>
+                <Text style={styles.infoValue}>{profileData.email}</Text>
               </View>
             </View>
             <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.infoCard} onPress={handleCallPress}>
+          <TouchableOpacity style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <View style={styles.infoIconContainer}>
                 <Ionicons name="call" size={20} color="#4F46E5" />
               </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Phone</Text>
-                <Text style={styles.infoValue}>+91 9876543210</Text>
+                <Text style={styles.infoValue}>{profileData.phone}</Text>
               </View>
             </View>
             <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
@@ -693,88 +399,62 @@ const ProfileScreen = ({ navigation }) => {
               </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Location</Text>
-                <Text style={styles.infoValue}>Rajam, Andhra Pradesh</Text>
+                <Text style={styles.infoValue}>{profileData.location}</Text>
               </View>
             </View>
-          </View>
-        </View>
-
-        {/* Skills Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitleMain}>Skills & Expertise</Text>
-          <View style={styles.skillsContainer}>
-            {['React Native', 'JavaScript', 'Node.js', 'MongoDB', 'Firebase', 'Express.js'].map((skill, index) => (
-              <View key={index} style={styles.skillTag}>
-                <Text style={styles.skillText}>{skill}</Text>
-              </View>
-            ))}
           </View>
         </View>
 
         {/* Work Preferences */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitleMain}>Work Preferences</Text>
+          <Text style={styles.sectionTitle}>Work Preferences</Text>
           <View style={styles.preferencesContainer}>
             <View style={styles.preferenceItem}>
               <Ionicons name="time" size={18} color="#6B7280" />
               <Text style={styles.preferenceLabel}>Work Type</Text>
-              <Text style={styles.preferenceValue}>Full-time / Contract</Text>
+              <Text style={styles.preferenceValue}>{profileData.workType}</Text>
             </View>
             <View style={styles.preferenceItem}>
               <Ionicons name="cash" size={18} color="#6B7280" />
               <Text style={styles.preferenceLabel}>Hourly Rate</Text>
-              <Text style={styles.preferenceValue}>₹2000 - ₹3000</Text>
+              <Text style={styles.preferenceValue}>{profileData.hourlyRate}</Text>
             </View>
             <View style={styles.preferenceItem}>
               <Ionicons name="calendar" size={18} color="#6B7280" />
               <Text style={styles.preferenceLabel}>Availability</Text>
-              <Text style={styles.preferenceValue}>Monday - Saturday</Text>
+              <Text style={styles.preferenceValue}>{profileData.availability}</Text>
             </View>
           </View>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitleMain}>Quick Actions</Text>
-          
-          <TouchableOpacity style={styles.actionCard} onPress={handleMyApplications}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.actionCard}
+              onPress={item.onPress}
+            >
             <View style={styles.actionHeader}>
               <View style={styles.actionIconContainer}>
-                <Ionicons name="document-text" size={20} color="#4F46E5" />
+                  <Ionicons name={item.icon} size={20} color="#4F46E5" />
               </View>
               <View style={styles.actionContent}>
-                <Text style={styles.actionTitle}>My Applications</Text>
-                <Text style={styles.actionSubtitle}>View your job applications</Text>
+                  <View style={styles.actionTitleRow}>
+                    <Text style={styles.actionTitle}>{item.title}</Text>
+                    {item.badge && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{item.badge}</Text>
+              </View>
+                    )}
+            </View>
+                  <Text style={styles.actionSubtitle}>{item.subtitle}</Text>
               </View>
             </View>
             <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionCard} onPress={handleSavedJobs}>
-            <View style={styles.actionHeader}>
-              <View style={styles.actionIconContainer}>
-                <Ionicons name="bookmark" size={20} color="#4F46E5" />
-              </View>
-              <View style={styles.actionContent}>
-                <Text style={styles.actionTitle}>Saved Jobs</Text>
-                <Text style={styles.actionSubtitle}>Jobs you bookmarked</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionCard} onPress={handleSettings}>
-            <View style={styles.actionHeader}>
-              <View style={styles.actionIconContainer}>
-                <Ionicons name="settings" size={20} color="#4F46E5" />
-              </View>
-              <View style={styles.actionContent}>
-                <Text style={styles.actionTitle}>Settings</Text>
-                <Text style={styles.actionSubtitle}>App preferences</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
-          </TouchableOpacity>
+          ))}
         </View>
 
         {/* Action Buttons */}
@@ -786,10 +466,12 @@ const ProfileScreen = ({ navigation }) => {
 
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out" size={20} color="#FFFFFF" />
-            <Text style={styles.buttonText}>Logout</Text>
+            <Text style={styles.buttonText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <EditProfileModal />
     </SafeAreaView>
   );
 };
@@ -909,6 +591,35 @@ const styles = StyleSheet.create({
   experience: {
     fontSize: 14,
     color: '#6B7280',
+    marginBottom: 20,
+  },
+  availabilityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    width: '100%',
+  },
+  availabilityLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  toggle: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  toggleCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -925,19 +636,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
   },
-  statItem: {
+  statCard: {
     alignItems: 'center',
   },
-  statNumber: {
-    fontSize: 20,
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 18,
     fontWeight: '700',
     color: '#1F2937',
-    marginTop: 6,
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#6B7280',
-    marginTop: 4,
+    textAlign: 'center',
   },
   section: {
     backgroundColor: '#FFFFFF',
@@ -953,34 +672,90 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F3F4F6',
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  sectionTitleMain: {
+  sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#1F2937',
     marginBottom: 15,
   },
-  toggle: {
-    width: 44,
-    height: 24,
+  skillsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  skillCard: {
+    width: '48%',
+    backgroundColor: '#F9FAFB',
+    padding: 16,
     borderRadius: 12,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  skillIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 2,
+    marginBottom: 8,
   },
-  toggleCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+  skillName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
+    textAlign: 'center',
   },
-  availabilityText: {
+  skillLevel: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  jobCard: {
+    backgroundColor: '#F9FAFB',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  jobHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  jobTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    flex: 1,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#F59E0B',
+    marginLeft: 4,
+  },
+  employerName: {
     fontSize: 14,
     color: '#6B7280',
+    marginBottom: 8,
+  },
+  jobDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  jobDuration: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  jobEarnings: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#10B981',
   },
   infoCard: {
     flexDirection: 'row',
@@ -1016,25 +791,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
     fontWeight: '500',
-  },
-  skillsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  skillTag: {
-    backgroundColor: '#EBF4FF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginRight: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#D1E7FF',
-  },
-  skillText: {
-    color: '#1E40AF',
-    fontSize: 12,
-    fontWeight: '600',
   },
   preferencesContainer: {
     backgroundColor: '#F9FAFB',
@@ -1082,15 +838,27 @@ const styles = StyleSheet.create({
   actionContent: {
     flex: 1,
   },
+  actionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
   actionTitle: {
     fontSize: 15,
     color: '#1F2937',
     fontWeight: '600',
-    marginBottom: 2,
+    flex: 1,
   },
   actionSubtitle: {
     fontSize: 13,
     color: '#6B7280',
+  },
+  badge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    marginLeft: 8,
   },
   buttonContainer: {
     paddingHorizontal: 20,
@@ -1128,6 +896,60 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  // Modal Styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  modalSaveText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4F46E5',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
   },
 });
 

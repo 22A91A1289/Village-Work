@@ -31,13 +31,10 @@
 //         return jobs.filter(job => job.stream === 'technical');
 //       case 'training':
 //         return jobs.filter(job => job.trainingProvided);
-//       case 'beginner':
-//         return jobs.filter(job => job.experienceLevel === 'beginner');
 //       case 'urgent':
 //         return jobs.filter(job => job.applicants < 3);
 //       default:
 //         return jobs;
-//     }
 //   };
 
 //   const filteredJobs = getFilteredJobs();
@@ -1029,6 +1026,7 @@ import {
   SafeAreaView,
   FlatList,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -1164,82 +1162,83 @@ const ActiveJobsScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header Stats */}
-      <View style={styles.statsHeader}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{stats.total}</Text>
-          <Text style={styles.statLabel}>Total Jobs</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: '#10B981' }]}>{stats.helpers}</Text>
-          <Text style={styles.statLabel}>Helper Jobs</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: '#3B82F6' }]}>{stats.workers}</Text>
-          <Text style={styles.statLabel}>Worker Jobs</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: '#EF4444' }]}>{stats.urgent}</Text>
-          <Text style={styles.statLabel}>Urgent</Text>
-        </View>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#6B7280" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search jobs..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-
-      {/* Filter Buttons */}
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={filters}
-        keyExtractor={item => item.key}
-        contentContainerStyle={styles.filterContainer}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              selectedFilter === item.key && styles.activeFilter
-            ]}
-            onPress={() => setSelectedFilter(item.key)}
-          >
-            <Ionicons
-              name={item.icon}
-              size={16}
-              color={selectedFilter === item.key ? '#FFFFFF' : '#6B7280'}
-            />
-            <Text style={[
-              styles.filterText,
-              selectedFilter === item.key && styles.activeFilterText
-            ]}>
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
-
-      {/* Jobs List */}
-      <FlatList
-        data={filteredJobs}
-        keyExtractor={item => item.id.toString()}
-        renderItem={renderJobCard}
-        contentContainerStyle={styles.jobsList}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="briefcase-outline" size={64} color="#D1D5DB" />
-            <Text style={styles.emptyText}>No jobs found</Text>
-            <Text style={styles.emptySubtext}>Try adjusting your filters</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header Stats */}
+        <View style={styles.statsHeader}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{stats.total}</Text>
+            <Text style={styles.statLabel}>Total Jobs</Text>
           </View>
-        }
-      />
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: '#10B981' }]}>{stats.helpers}</Text>
+            <Text style={styles.statLabel}>Helper Jobs</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: '#3B82F6' }]}>{stats.workers}</Text>
+            <Text style={styles.statLabel}>Worker Jobs</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: '#EF4444' }]}>{stats.urgent}</Text>
+            <Text style={styles.statLabel}>Urgent</Text>
+          </View>
+        </View>
+
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#6B7280" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search jobs..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        {/* Filter Buttons */}
+        <View style={styles.filterSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContainer}>
+            {filters.map((filter) => (
+              <TouchableOpacity
+                key={filter.key}
+                onPress={() => setSelectedFilter(filter.key)}
+                style={[
+                  styles.filterButton,
+                  selectedFilter === filter.key && styles.activeFilter
+                ]}
+              >
+                <Ionicons
+                  name={filter.icon}
+                  size={16}
+                  color={selectedFilter === filter.key ? '#FFFFFF' : '#6B7280'}
+                />
+                <Text style={[
+                  styles.filterText,
+                  selectedFilter === filter.key && styles.activeFilterText
+                ]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Jobs List */}
+        <View style={styles.jobsSection}>
+          {filteredJobs.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="briefcase-outline" size={64} color="#D1D5DB" />
+              <Text style={styles.emptyText}>No jobs found</Text>
+              <Text style={styles.emptySubtext}>Try adjusting your filters</Text>
+            </View>
+          ) : (
+            filteredJobs.map((item) => (
+              <View key={item.id} style={styles.jobCardWrapper}>
+                {renderJobCard({ item })}
+              </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -1248,6 +1247,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+    paddingTop: 20, // Increased top padding to avoid collision with header
   },
   statsHeader: {
     flexDirection: 'row',
@@ -1283,58 +1283,74 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 16,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14, // Increased padding for better visibility
     borderRadius: 12,
-    elevation: 1,
+    elevation: 2, // Increased elevation for better shadow
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   searchInput: {
     flex: 1,
     marginLeft: 12,
     fontSize: 16,
     color: '#1F2937',
+    fontWeight: '500', // Made text slightly bolder
+  },
+  filterSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 12, // Increased padding
+    marginBottom: 12, // Increased margin
   },
   filterContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingVertical: 6, // Increased padding
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 18, // Increased padding
+    paddingVertical: 12, // Increased padding
     borderRadius: 20,
-    marginRight: 8,
-    elevation: 1,
+    marginRight: 12, // Increased margin
+    elevation: 2, // Increased elevation
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    minHeight: 44, // Added minimum height
   },
   activeFilter: {
     backgroundColor: '#4F46E5',
+    borderColor: '#4F46E5',
+    elevation: 3, // Higher elevation for active state
   },
   filterText: {
-    marginLeft: 6,
+    marginLeft: 8, // Increased margin
     fontSize: 14,
     color: '#6B7280',
-    fontWeight: '500',
+    fontWeight: '600', // Made text bolder
   },
   activeFilterText: {
     color: '#FFFFFF',
+    fontWeight: '700', // Made active text bolder
   },
-  jobsList: {
+  jobsSection: {
     paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  jobCardWrapper: {
+    marginBottom: 12,
   },
   jobCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

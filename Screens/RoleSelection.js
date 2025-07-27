@@ -279,6 +279,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -287,11 +288,13 @@ const RoleSelection = ({ navigation }) => {
   const handleRoleSelection = async (role) => {
     try {
       await AsyncStorage.setItem('userRole', role);
-      // Navigate to the correct tab navigator
+      
       if (role === 'worker') {
-        navigation.replace('WorkerTabs');
+        // For workers, go to experience selection first
+        navigation.navigate('WorkerExperienceSelection');
       } else {
-        navigation.replace('OwnerTabs');
+        // For other roles, go directly to login
+        navigation.navigate('LoginScreen');
       }
     } catch (error) {
       console.error('Error saving role:', error);
@@ -349,12 +352,45 @@ const RoleSelection = ({ navigation }) => {
             </View>
           </View>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.roleCard, { backgroundColor: '#F59E0B' }]}
+          onPress={() => handleRoleSelection('admin')}
+        >
+          <View style={[styles.roleIcon, { backgroundColor: '#FFFFFF' }]}>
+            <Ionicons name="shield" size={30} color="#F59E0B" />
+          </View>
+          <View style={styles.roleContent}>
+            <Text style={styles.roleCardTitle}>I'm an Admin</Text>
+            <Text style={styles.roleDescription}>
+              Manage platform operations and user verification
+            </Text>
+            <View style={styles.roleFeatures}>
+              <Text style={styles.featureText}>• Review work completions</Text>
+              <Text style={styles.featureText}>• Approve skill tests</Text>
+              <Text style={styles.featureText}>• Process payments</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>
           By continuing, you agree to our Terms of Service and Privacy Policy
         </Text>
+        <TouchableOpacity 
+          style={styles.resetButton}
+          onPress={async () => {
+            try {
+              await AsyncStorage.clear();
+              Alert.alert('Reset Complete', 'All data has been cleared. You can start fresh.');
+            } catch (error) {
+              console.error('Error clearing data:', error);
+            }
+          }}
+        >
+          <Text style={styles.resetButtonText}>Reset App Data (For Testing)</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -368,73 +404,73 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingTop: 40,
+    paddingBottom: 30,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#1F2937',
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 20,
   },
   roleContainer: {
     flex: 1,
     paddingHorizontal: 20,
   },
   roleTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1F2937',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
   },
   roleCard: {
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 20,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 15,
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: 6,
   },
   roleIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 20,
+    marginRight: 16,
   },
   roleContent: {
     flex: 1,
   },
   roleCardTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   roleDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#E5E7EB',
-    marginBottom: 12,
-    lineHeight: 20,
+    marginBottom: 10,
+    lineHeight: 18,
   },
   roleFeatures: {
-    gap: 4,
+    gap: 3,
   },
   featureText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#D1D5DB',
   },
   footer: {
@@ -446,6 +482,21 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 18,
+    marginBottom: 16,
+  },
+  resetButton: {
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  resetButtonText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });
 
