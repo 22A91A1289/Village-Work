@@ -132,6 +132,14 @@ const LoginScreen = ({ navigation }) => {
         >
           {/* Header */}
           <View style={styles.header}>
+            <TouchableOpacity 
+              onPress={() => navigation.goBack()} 
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#374151" />
+              <Text style={styles.backText}>Back</Text>
+            </TouchableOpacity>
+            
             <View style={styles.logoContainer}>
               <View style={styles.logo}>
                 <Ionicons name="construct" size={40} color="#4F46E5" />
@@ -274,6 +282,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 40,
     paddingBottom: 30,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    top: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+  },
+  backText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#374151',
+    fontWeight: '600',
   },
   logoContainer: {
     alignItems: 'center',

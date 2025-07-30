@@ -9,6 +9,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -180,12 +181,17 @@ const SkillAssessmentScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Skill Assessment</Text>
-        <Text style={styles.headerSubtitle}>Help us show you the right jobs</Text>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      
+      {/* Back Navigation Header */}
+      <View style={styles.navigationHeader}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
       </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Experience Level Selection */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Choose Your Experience Level</Text>
@@ -645,6 +651,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#6B7280',
+  },
+  navigationHeader: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#374151',
+    fontWeight: '600',
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
 });
 

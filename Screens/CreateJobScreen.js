@@ -9,6 +9,7 @@ import {
   ScrollView,
   Switch,
   Alert,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -124,6 +125,16 @@ const CreateJobScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      
+      {/* Back Navigation Header */}
+      <View style={styles.navigationHeader}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+      </View>
+      
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Create New Job</Text>
@@ -241,6 +252,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
     paddingTop: 20, // Increased top padding to avoid collision with header
+  },
+  navigationHeader: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#374151',
   },
   header: {
     backgroundColor: '#FFFFFF',

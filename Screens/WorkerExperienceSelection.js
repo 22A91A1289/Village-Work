@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 const WorkerExperienceSelection = ({ navigation }) => {
   const handleExperienceSelection = async (experience) => {
     try {
-      await AsyncStorage.setItem('workerExperience', experience);
+      await AsyncStorage.setItem('userExperience', experience);
       
       // Navigate to KYC verification
       navigation.navigate('WorkerKYCVerification');
@@ -25,6 +25,14 @@ const WorkerExperienceSelection = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      
+      {/* Back Navigation Header */}
+      <View style={styles.navigationHeader}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+      </View>
       
       <View style={styles.header}>
         <Text style={styles.title}>Select Your Experience Level</Text>
@@ -88,6 +96,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+  },
+  navigationHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 10,
+    backgroundColor: '#F8FAFC',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  backText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#374151',
   },
   header: {
     alignItems: 'center',

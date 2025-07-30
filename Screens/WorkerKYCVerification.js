@@ -66,6 +66,14 @@ const WorkerKYCVerification = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
       
+      {/* Back Navigation Header */}
+      <View style={styles.navigationHeader}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+      </View>
+      
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.logoContainer}>
@@ -287,6 +295,23 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 18,
+  },
+  navigationHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    backgroundColor: '#F8FAFC',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backText: {
+    fontSize: 16,
+    color: '#374151',
+    marginLeft: 8,
   },
 });
 

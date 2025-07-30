@@ -136,30 +136,17 @@ const AdminDashboard = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={{ width: 40 }} />
-        </View>
-        
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Admin Dashboard</Text>
-          <Text style={styles.headerSubtitle}>Platform Management</Text>
-        </View>
-        
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Ionicons name="notifications" size={24} color="#374151" />
-            <View style={styles.notificationBadge}>
-              <Text style={styles.badgeText}>5</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
+      {/* Back Navigation Header */}
+      <View style={styles.navigationHeader}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
       </View>
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Stats Overview */}
         <View style={styles.statsContainer}>
           {platformStats.map((stat, index) => (
@@ -464,6 +451,33 @@ const styles = StyleSheet.create({
   activityTime: {
     fontSize: 12,
     color: '#6B7280',
+  },
+  navigationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#374151',
+  },
+  content: {
+    flex: 1,
   },
 });
 

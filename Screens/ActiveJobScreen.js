@@ -1027,6 +1027,7 @@ import {
   FlatList,
   TextInput,
   ScrollView,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -1162,6 +1163,16 @@ const ActiveJobsScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      
+      {/* Back Navigation Header */}
+      <View style={styles.navigationHeader}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+      </View>
+      
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header Stats */}
         <View style={styles.statsHeader}>
@@ -1248,6 +1259,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
     paddingTop: 20, // Increased top padding to avoid collision with header
+  },
+  navigationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+  },
+  backText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#374151',
+    fontWeight: '600',
   },
   statsHeader: {
     flexDirection: 'row',
