@@ -1094,7 +1094,7 @@ const ActiveJobsScreen = ({ route, navigation }) => {
   const renderJobCard = ({ item }) => (
     <TouchableOpacity
       style={styles.jobCard}
-      onPress={() => navigation.navigate('JobManagement', { job: item })}
+                      onPress={() => navigation.navigate('JobManagementScreen', { job: item })}
     >
       <View style={styles.jobHeader}>
         <View style={styles.jobTitleContainer}>
@@ -1143,7 +1143,7 @@ const ActiveJobsScreen = ({ route, navigation }) => {
         
         <TouchableOpacity
           style={styles.viewApplicationsButton}
-          onPress={() => navigation.navigate('Applications', { job: item })}
+                          onPress={() => navigation.navigate('ApplicationsScreen', { job: item })}
         >
           <Text style={styles.viewApplicationsText}>View Applications</Text>
           <Ionicons name="chevron-forward" size={16} color="#4F46E5" />
@@ -1162,6 +1162,15 @@ const ActiveJobsScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header with Back Button */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Active Jobs</Text>
+        <View style={{ width: 24 }} />
+      </View>
+      
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header Stats */}
         <View style={styles.statsHeader}>
@@ -1247,7 +1256,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
-    paddingTop: 20, // Increased top padding to avoid collision with header
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  backButton: {
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
   },
   statsHeader: {
     flexDirection: 'row',

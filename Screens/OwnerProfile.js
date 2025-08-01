@@ -45,7 +45,7 @@ const OwnerProfile = ({ navigation }) => {
       subtitle: 'Create, edit, and track your job postings', 
       screen: 'JobManagement',
       badge: '3 Active',
-      onPress: () => navigation.navigate('AllApplications', { jobs: [] })
+      onPress: () => navigation.navigate('AllApplicationScreen', { jobs: [] })
     },
     { 
       icon: 'people-outline', 

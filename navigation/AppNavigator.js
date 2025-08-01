@@ -34,6 +34,9 @@ import AllApplicationScreen from '../Screens/AllApplicationScreen';
 import SkillAssessmentScreen from '../Screens/SkillAssessmentScreen';
 import TestStatusScreen from '../Screens/TestStatusScreen';
 
+// Search Screen
+import SearchScreen from '../Screens/SearchScreen';
+
 // Admin Screens
 import AdminDashboard from '../Screens/AdminDashboard';
 import AdminPaymentManagement from '../Screens/AdminPaymentManagement';
@@ -137,7 +140,8 @@ export default function AppNavigator() {
                 {/* Worker Stack */}
                 <Stack.Screen name="WorkerTabNavigator" component={WorkerTabNavigator} />
         <Stack.Screen name="JobDetailsScreen" component={JobDetailsScreen} />
-        <Stack.Screen name="CategoryJobsScreen" component={CategoryJobsScreen} />
+        <Stack.Screen name="CategoryJobs" component={CategoryJobsScreen} />
+        <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="ActiveJobScreen" component={ActiveJobScreen} />
         <Stack.Screen name="SkillAssessmentScreen" component={SkillAssessmentScreen} />
         <Stack.Screen name="TestStatusScreen" component={TestStatusScreen} />
@@ -145,6 +149,7 @@ export default function AppNavigator() {
         {/* Owner Stack */}
         <Stack.Screen name="OwnerTabNavigator" component={OwnerTabNavigator} />
         <Stack.Screen name="CreateJobScreen" component={CreateJobScreen} />
+        <Stack.Screen name="JobManagementScreen" component={JobManagementScreen} />
         <Stack.Screen name="ApplicationsScreen" component={ApplicationsScreen} />
         <Stack.Screen name="AllApplicationScreen" component={AllApplicationScreen} />
 

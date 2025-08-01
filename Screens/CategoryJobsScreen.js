@@ -10,101 +10,17 @@ import {
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { getJobsByCategory } from '../data/jobData';
 
 const CategoryJobsScreen = ({ route, navigation }) => {
   const { categoryName, categoryIcon } = route.params;
   const [selectedFilter, setSelectedFilter] = useState('all');
 
-  // Sample beginner-friendly jobs for the category
-  const categoryJobs = [
-    {
-      id: 1,
-      title: `${categoryName} - No Experience Required`,
-      location: 'Rajam, Srikakulam',
-      salary: categoryName.includes('Technical') ? '₹700/day' : '₹500/day',
-      type: categoryName.includes('Technical') ? 'Technical Work' : 'Daily Work',
-      timeAgo: '2 hours ago',
-      urgency: 'normal',
-      description: `Perfect opportunity for beginners to learn ${categoryName.toLowerCase()} skills with experienced professionals.`,
-      requirements: [
-        'Willingness to learn',
-        'Hardworking attitude',
-        'No prior experience needed',
-        'Basic communication skills'
-      ],
-      benefits: [
-        'On-job training provided',
-        'Daily payment',
-        'Skill development',
-        'Career growth opportunities'
-      ],
-      postedBy: 'Local Employer',
-      contact: '9876543210',
-      isApplied: false,
-      trainingProvided: true,
-      experienceLevel: 'beginner',
-      mentorshipAvailable: true,
-    },
-    {
-      id: 2,
-      title: `${categoryName} Helper - Learn While Working`,
-      location: 'Kothavalasa',
-      salary: categoryName.includes('Technical') ? '₹650/day' : '₹450/day',
-      type: categoryName.includes('Technical') ? 'Technical Work' : 'Daily Work',
-      timeAgo: '1 day ago',
-      urgency: 'urgent',
-      description: `Join our team as a ${categoryName.toLowerCase()} helper and learn valuable skills that will help you throughout your career.`,
-      requirements: [
-        'Eager to learn new skills',
-        'Physically fit',
-        'Team player',
-        'Available for training'
-      ],
-      benefits: [
-        'Professional mentorship',
-        'Weekly bonus',
-        'Safety training',
-        'Tool training included'
-      ],
-      postedBy: 'Skill Development Center',
-      contact: '9876543211',
-      isApplied: false,
-      trainingProvided: true,
-      experienceLevel: 'beginner',
-      mentorshipAvailable: true,
-    },
-    {
-      id: 3,
-      title: `${categoryName} Trainee Position`,
-      location: 'Vizianagaram',
-      salary: categoryName.includes('Technical') ? '₹600/day' : '₹400/day',
-      type: categoryName.includes('Technical') ? 'Technical Work' : 'Daily Work',
-      timeAgo: '3 days ago',
-      urgency: 'normal',
-      description: `Start your career in ${categoryName.toLowerCase()} with comprehensive training and support from experienced professionals.`,
-      requirements: [
-        'Interest in learning',
-        'Basic education helpful',
-        'Punctual and reliable',
-        'Safety conscious'
-      ],
-      benefits: [
-        'Complete training program',
-        'Certification upon completion',
-        'Job placement assistance',
-        'Monthly skill assessment'
-      ],
-      postedBy: 'Training Institute',
-      contact: '9876543212',
-      isApplied: false,
-      trainingProvided: true,
-      experienceLevel: 'beginner',
-      mentorshipAvailable: true,
-    },
-  ];
+  // Get jobs for this category from shared data
+  const categoryJobs = getJobsByCategory(categoryName);
 
   const handleJobPress = (job) => {
-    navigation.navigate('JobDetails', { job });
+    navigation.navigate('JobDetailsScreen', { job });
   };
 
   const handleApplyJob = (jobId) => {
@@ -347,7 +263,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 15,
     paddingBottom: 15,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -391,7 +307,7 @@ const styles = StyleSheet.create({
   },
   categoryInfoCard: {
     backgroundColor: '#EBF4FF',
-    marginHorizontal: 20,
+    marginHorizontal: 16,
     marginTop: 20,
     padding: 16,
     borderRadius: 12,
@@ -414,24 +330,31 @@ const styles = StyleSheet.create({
     color: '#3730A3',
     lineHeight: 20,
     marginBottom: 12,
+    flexWrap: 'wrap',
   },
   categoryFeatures: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    gap: 12,
   },
   categoryFeature: {
     flexDirection: 'row',
     alignItems: 'center',
+    minWidth: 0,
+    flex: 1,
   },
   categoryFeatureText: {
     fontSize: 12,
     color: '#047857',
     marginLeft: 4,
     fontWeight: '600',
+    flexWrap: 'wrap',
+    flex: 1,
   },
   statsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 16,
   },
@@ -463,7 +386,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   filtersContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingBottom: 16,
   },
   filterButton: {

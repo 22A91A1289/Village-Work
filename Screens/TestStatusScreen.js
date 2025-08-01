@@ -77,7 +77,7 @@ const TestStatusScreen = ({ navigation }) => {
   };
 
   const handleRescheduleTest = () => {
-    navigation.navigate('SkillAssessment');
+            navigation.navigate('SkillAssessmentScreen');
   };
 
   const handleContactTester = () => {
@@ -121,7 +121,7 @@ const TestStatusScreen = ({ navigation }) => {
           </Text>
           <TouchableOpacity 
             style={styles.primaryButton}
-            onPress={() => navigation.navigate('SkillAssessment')}
+            onPress={() => navigation.navigate('SkillAssessmentScreen')}
           >
             <Text style={styles.primaryButtonText}>Schedule a Test</Text>
           </TouchableOpacity>
@@ -270,7 +270,7 @@ const TestStatusScreen = ({ navigation }) => {
           {testData.status !== 'pending' && (
             <TouchableOpacity 
               style={styles.primaryButton}
-              onPress={() => navigation.navigate('SkillAssessment')}
+              onPress={() => navigation.navigate('SkillAssessmentScreen')}
             >
               <Ionicons name="refresh" size={20} color="#FFFFFF" />
               <Text style={styles.primaryButtonText}>Schedule New Test</Text>

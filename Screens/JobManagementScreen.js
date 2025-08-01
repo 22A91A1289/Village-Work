@@ -511,7 +511,7 @@ const JobManagementScreen = ({ route, navigation }) => {
   };
 
   const handleViewApplications = () => {
-    navigation.navigate('Applications', { job });
+            navigation.navigate('ApplicationsScreen', { job });
   };
 
   const handleEditJob = () => {

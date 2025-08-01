@@ -804,6 +804,7 @@ import {
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { allJobs } from '../data/jobData';
 
 const dailyWorkCategories = [
   { name: 'Farming', icon: 'leaf', color: '#10B981', hasSkillLevels: false },
@@ -819,60 +820,8 @@ const technicalWorkCategories = [
   { name: 'Mechanic', icon: 'car-sport', color: '#06B6D4', hasSkillLevels: true, requiresTest: true },
 ];
 
-const nearbyJobs = [
-  {
-    id: 1,
-    title: 'Farm Assistant Needed',
-    location: 'Rajam, Srikakulam',
-    salary: '₹450/day',
-    type: 'Daily Work',
-    timeAgo: '2 hours ago',
-    urgency: 'urgent',
-    description: 'Help with daily farming activities. Training provided for beginners.',
-    skillLevel: 'any', // beginner, intermediate, expert, any
-    requirements: ['Physically fit', 'Available full day'],
-    benefits: ['Daily payment', 'Lunch provided', 'Transport allowance'],
-    postedBy: 'Ramesh Naidu',
-    contact: '9876543210',
-    isApplied: false,
-    trainingProvided: true,
-  },
-  {
-    id: 2,
-    title: 'Experienced Electrician Required',
-    location: 'Kothavalasa',
-    salary: '₹1200/day',
-    type: 'Technical Work',
-    timeAgo: '1 day ago',
-    urgency: 'normal',
-    description: 'Complex home wiring project. Experience mandatory.',
-    skillLevel: 'expert',
-    requirements: ['5+ years experience', 'Own tools', 'Safety certified'],
-    benefits: ['High pay', 'Project bonus', 'Future work opportunities'],
-    postedBy: 'Anil Kumar',
-    contact: '9876501234',
-    isApplied: false,
-    requiresSkillTest: true,
-    testDetails: 'Basic electrical safety and wiring knowledge test',
-  },
-  {
-    id: 3,
-    title: 'Carpenter - All Levels Welcome',
-    location: 'Vizianagaram',
-    salary: '₹600-1000/day',
-    type: 'Technical Work',
-    timeAgo: '3 days ago',
-    urgency: 'normal',
-    description: 'Furniture making project. Beginners can learn, experienced get higher pay.',
-    skillLevel: 'any',
-    requirements: ['Interest in woodworking', 'Basic tool knowledge helpful'],
-    benefits: ['Skill development', 'Variable pay based on skill', 'Weekly bonus'],
-    postedBy: 'Suresh',
-    contact: '9998887777',
-    isApplied: false,
-    hasSkillAssessment: true,
-  },
-];
+// Use shared job data instead of local nearbyJobs
+const nearbyJobs = allJobs;
 
 const HomeScreen = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
@@ -923,7 +872,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleJobPress = (job) => {
-    navigation.navigate('JobDetails', { job });
+    navigation.navigate('JobDetailsScreen', { job });
   };
 
   const handleApplyJob = (job) => {
@@ -1121,7 +1070,7 @@ const HomeScreen = ({ navigation }) => {
           <Ionicons name="search" size={20} color="#9CA3AF" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search jobs by requirements, location..."
+            placeholder="Search jobs "
             value={searchText}
             onChangeText={setSearchText}
             onFocus={() => navigation.navigate('Search')}
@@ -1132,7 +1081,11 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Skill Status Card */}
         <View style={styles.skillCard}>
           <View style={styles.skillHeader}>
@@ -1184,7 +1137,7 @@ const HomeScreen = ({ navigation }) => {
                   </Text>
                   <TouchableOpacity 
                     style={styles.testStatusButton}
-                    onPress={() => navigation.navigate('SkillAssessment')}
+                    onPress={() => navigation.navigate('SkillAssessmentScreen')}
                   >
                     <Text style={styles.testStatusButtonText}>Take Test Now</Text>
                   </TouchableOpacity>
@@ -1424,11 +1377,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
+  scrollContent: {
+    paddingBottom: 20,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 15,
     paddingBottom: 15,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -1440,17 +1396,17 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   headerLeft: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   headerCenter: {
-    flex: 1,
+    flex: 2,
     alignItems: 'center',
   },
   headerRight: {
-    flex: 1,
     alignItems: 'flex-end',
+    flex: 1,
   },
   locationText: {
     fontSize: 14,
@@ -1459,13 +1415,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   brandTitle: {
-    fontSize: 18, // Reduced from 22
+    fontSize: 18,
     fontWeight: '800',
     color: '#1F2937',
     textAlign: 'center',
   },
   brandSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#4F46E5',
     textAlign: 'center',
     marginTop: 2,
@@ -1671,6 +1627,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     marginBottom: 16,
+    flexWrap: 'wrap',
   },
   sectionTitle: {
     fontSize: 18,
@@ -1754,6 +1711,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+    flexWrap: 'wrap',
   },
   jobTypeTag: {
     paddingHorizontal: 12,
