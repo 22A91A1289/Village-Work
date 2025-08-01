@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -13,12 +13,17 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const ProfileScreen = ({ navigation }) => {
+  const { t, language, changeLanguage } = useLanguage();
   const [isOnline, setIsOnline] = useState(true);
   const [availableForWork, setAvailableForWork] = useState(true);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [notifications, setNotifications] = useState(3);
+  const [videoStatus, setVideoStatus] = useState('none'); // 'none', 'pending', 'completed'
 
   const [profileData, setProfileData] = useState({
     name: 'Venkata Siva Rama Raju',
@@ -81,52 +86,6 @@ const ProfileScreen = ({ navigation }) => {
     },
   ];
 
-  const menuItems = [
-    {
-      icon: 'document-text-outline',
-      title: 'My Applications',
-      subtitle: 'Track your job applications',
-      badge: '5 Pending',
-      onPress: () => Alert.alert('Applications', 'View your job applications'),
-    },
-    {
-      icon: 'briefcase-outline',
-      title: 'Work History',
-      subtitle: 'Past jobs and earnings',
-      onPress: () => Alert.alert('Work History', 'View your completed jobs'),
-    },
-    {
-      icon: 'wallet-outline',
-      title: 'Earnings & Payments',
-      subtitle: 'Payment history and methods',
-      onPress: () => Alert.alert('Payments', 'Manage your earnings and payments'),
-    },
-    {
-      icon: 'shield-checkmark-outline',
-      title: 'Skills Assessment',
-      subtitle: 'Take skill tests to improve rating',
-      onPress: () => navigation.navigate('SkillAssessment'),
-    },
-    {
-      icon: 'notifications-outline',
-      title: 'Job Alerts',
-      subtitle: 'Get notified about new jobs',
-      onPress: () => Alert.alert('Job Alerts', 'Configure job notifications'),
-    },
-    {
-      icon: 'settings-outline',
-      title: 'Settings',
-      subtitle: 'Privacy and preferences',
-      onPress: () => Alert.alert('Settings', 'Manage your account settings'),
-    },
-    {
-      icon: 'help-circle-outline',
-      title: 'Help & Support',
-      subtitle: 'Get help and contact support',
-      onPress: () => Alert.alert('Support', 'Get help and contact support'),
-    },
-  ];
-
   const handleEditProfile = () => {
     setIsEditModalVisible(true);
   };
@@ -158,6 +117,25 @@ const ProfileScreen = ({ navigation }) => {
     );
   };
 
+  useEffect(() => {
+    loadVideoStatus();
+  }, []);
+
+  const loadVideoStatus = async () => {
+    try {
+      const hasVideo = await AsyncStorage.getItem('hasVideoIntroduction');
+      if (hasVideo === 'true') {
+        setVideoStatus('completed');
+      } else if (hasVideo === 'pending') {
+        setVideoStatus('pending');
+      } else {
+        setVideoStatus('none');
+      }
+    } catch (error) {
+      console.error('Error loading video status:', error);
+    }
+  };
+
   const handleWorkAvailabilityToggle = () => {
     setAvailableForWork(!availableForWork);
     Alert.alert(
@@ -171,6 +149,133 @@ const ProfileScreen = ({ navigation }) => {
     Alert.alert('Notifications', 'View your notifications');
   };
 
+  // Get menu items with dynamic video status
+  const getMenuItems = () => [
+    {
+      icon: 'document-text-outline',
+      title: 'My Applications',
+      subtitle: 'Track your job applications',
+      badge: '5 Pending',
+      onPress: () => Alert.alert('Applications', 'View your job applications'),
+    },
+    {
+      icon: 'briefcase-outline',
+      title: 'Work History',
+      subtitle: 'Past jobs and earnings',
+      onPress: () => Alert.alert('Work History', 'View your completed jobs'),
+    },
+    {
+      icon: 'wallet-outline',
+      title: 'Earnings & Payments',
+      subtitle: 'Payment history and methods',
+      onPress: () => Alert.alert('Payments', 'Manage your earnings and payments'),
+    },
+    {
+      icon: 'videocam-outline',
+      title: 'Upload Introduction Video',
+      subtitle: videoStatus === 'completed' 
+        ? 'Video uploaded ✓' 
+        : videoStatus === 'pending' 
+        ? 'Pending - Upload to access more jobs' 
+        : 'Record and upload your introduction video',
+      badge: videoStatus === 'pending' ? 'Pending' : videoStatus === 'completed' ? 'Completed' : null,
+      onPress: () => navigation.navigate('VideoUploadScreen'),
+    },
+    {
+      icon: 'shield-checkmark-outline',
+      title: 'Skills Assessment',
+      subtitle: 'Take skill tests to improve rating',
+      onPress: () => navigation.navigate('SkillAssessmentScreen'),
+    },
+    {
+      icon: 'notifications-outline',
+      title: 'Job Alerts',
+      subtitle: 'Get notified about new jobs',
+      onPress: () => Alert.alert('Job Alerts', 'Configure job notifications'),
+    },
+    {
+      icon: 'language-outline',
+      title: t('changeLanguage'),
+      subtitle: `${t('language')}: ${language === 'en' ? t('english') : language === 'te' ? t('telugu') : t('hindi')}`,
+      onPress: () => setIsLanguageModalVisible(true),
+    },
+    {
+      icon: 'settings-outline',
+      title: 'Settings',
+      subtitle: 'Privacy and preferences',
+      onPress: () => Alert.alert('Settings', 'Manage your account settings'),
+    },
+    {
+      icon: 'help-circle-outline',
+      title: 'Help & Support',
+      subtitle: 'Get help and contact support',
+      onPress: () => Alert.alert('Support', 'Get help and contact support'),
+    },
+  ];
+
+  const menuItems = getMenuItems();
+
+  const LanguageModal = () => (
+    <Modal
+      visible={isLanguageModalVisible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setIsLanguageModalVisible(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.languageModalContainer}>
+          <View style={styles.languageModalHeader}>
+            <Text style={styles.languageModalTitle}>{t('selectLanguage')}</Text>
+            <TouchableOpacity onPress={() => setIsLanguageModalVisible(false)}>
+              <Ionicons name="close" size={24} color="#374151" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.languageOptions}>
+            <TouchableOpacity
+              style={[styles.languageOption, language === 'en' && styles.languageOptionSelected]}
+              onPress={() => {
+                changeLanguage('en');
+                setIsLanguageModalVisible(false);
+              }}
+            >
+              <Text style={[styles.languageOptionText, language === 'en' && styles.languageOptionTextSelected]}>
+                {t('english')}
+              </Text>
+              {language === 'en' && <Ionicons name="checkmark-circle" size={24} color="#4F46E5" />}
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.languageOption, language === 'te' && styles.languageOptionSelected]}
+              onPress={() => {
+                changeLanguage('te');
+                setIsLanguageModalVisible(false);
+              }}
+            >
+              <Text style={[styles.languageOptionText, language === 'te' && styles.languageOptionTextSelected]}>
+                {t('telugu')}
+              </Text>
+              {language === 'te' && <Ionicons name="checkmark-circle" size={24} color="#4F46E5" />}
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.languageOption, language === 'hi' && styles.languageOptionSelected]}
+              onPress={() => {
+                changeLanguage('hi');
+                setIsLanguageModalVisible(false);
+              }}
+            >
+              <Text style={[styles.languageOptionText, language === 'hi' && styles.languageOptionTextSelected]}>
+                {t('hindi')}
+              </Text>
+              {language === 'hi' && <Ionicons name="checkmark-circle" size={24} color="#4F46E5" />}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   const EditProfileModal = () => (
     <Modal
       visible={isEditModalVisible}
@@ -180,11 +285,11 @@ const ProfileScreen = ({ navigation }) => {
       <SafeAreaView style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
-            <Text style={styles.modalCancelText}>Cancel</Text>
+            <Text style={styles.modalCancelText}>{t('cancel')}</Text>
           </TouchableOpacity>
-          <Text style={styles.modalTitle}>Edit Profile</Text>
+          <Text style={styles.modalTitle}>{t('editProfile')}</Text>
           <TouchableOpacity onPress={handleSaveProfile}>
-            <Text style={styles.modalSaveText}>Save</Text>
+            <Text style={styles.modalSaveText}>{t('save')}</Text>
           </TouchableOpacity>
         </View>
         
@@ -472,6 +577,7 @@ const ProfileScreen = ({ navigation }) => {
       </ScrollView>
 
       <EditProfileModal />
+      <LanguageModal />
     </SafeAreaView>
   );
 };
@@ -485,7 +591,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 40,
     paddingBottom: 15,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -497,20 +603,20 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   headerLeft: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   headerCenter: {
-    flex: 1,
+    flex: 2,
     alignItems: 'center',
   },
   headerRight: {
-    flex: 1,
     alignItems: 'flex-end',
+    flex: 1,
   },
   brandTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#1F2937',
     textAlign: 'center',
@@ -950,6 +1056,61 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     textAlignVertical: 'top',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  languageModalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+    maxHeight: '50%',
+  },
+  languageModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  languageModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  languageOptions: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  languageOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+  },
+  languageOptionSelected: {
+    backgroundColor: '#EEF2FF',
+    borderColor: '#4F46E5',
+  },
+  languageOptionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  languageOptionTextSelected: {
+    color: '#4F46E5',
   },
 });
 

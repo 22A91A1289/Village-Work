@@ -14,9 +14,11 @@ const WorkerExperienceSelection = ({ navigation }) => {
   const handleExperienceSelection = async (experience) => {
     try {
       await AsyncStorage.setItem('userExperience', experience);
+      await AsyncStorage.setItem('userSkillLevel', 'new');
+      await AsyncStorage.setItem('skillAssessmentCompleted', 'pending');
       
-      // Navigate to KYC verification
-      navigation.navigate('WorkerKYCVerification');
+      // Navigate directly to worker home
+      navigation.replace('WorkerTabNavigator');
     } catch (error) {
       console.error('Error saving experience:', error);
     }

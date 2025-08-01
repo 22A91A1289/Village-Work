@@ -39,14 +39,6 @@ const LoginScreen = ({ navigation }) => {
       color: '#10B981',
       demoEmail: 'recruiter@vwork.com',
     },
-    {
-      key: 'admin',
-      title: 'Admin',
-      subtitle: 'Platform management',
-      icon: 'shield',
-      color: '#F59E0B',
-      demoEmail: 'admin@vwork.com',
-    },
   ];
 
   useEffect(() => {
@@ -91,12 +83,7 @@ const LoginScreen = ({ navigation }) => {
       setIsLoading(false);
       
       // For demo purposes, accept any email/password
-      if (selectedRole === 'admin') {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'AdminTabNavigator' }],
-        });
-      } else if (selectedRole === 'recruiter' || selectedRole === 'owner') {
+      if (selectedRole === 'recruiter' || selectedRole === 'owner') {
         navigation.reset({
           index: 0,
           routes: [{ name: 'OwnerTabNavigator' }],
@@ -144,8 +131,8 @@ const LoginScreen = ({ navigation }) => {
               <View style={styles.logo}>
                 <Ionicons name="construct" size={40} color="#4F46E5" />
               </View>
-              <Text style={styles.brandTitle}>VWork</Text>
-              <Text style={styles.brandSubtitle}>Village Work Platform</Text>
+              <Text style={styles.brandTitle}>WORKNEX</Text>
+              <Text style={styles.brandSubtitle}>STUDENT EMPLOYMENT PLATFORM</Text>
             </View>
           </View>
 
@@ -242,14 +229,12 @@ const LoginScreen = ({ navigation }) => {
               <Text style={styles.googleButtonText}>Continue with Google</Text>
             </TouchableOpacity>
 
-            {selectedRole !== 'admin' && (
-              <View style={styles.signUpContainer}>
-                <Text style={styles.signUpText}>Don't have an account? </Text>
-                <TouchableOpacity onPress={handleSignUp}>
-                  <Text style={styles.signUpLink}>Sign Up</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            <View style={styles.signUpContainer}>
+              <Text style={styles.signUpText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={handleSignUp}>
+                <Text style={styles.signUpLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Demo Credentials */}

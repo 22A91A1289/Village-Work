@@ -45,7 +45,7 @@ const OwnerProfile = ({ navigation }) => {
       subtitle: 'Create, edit, and track your job postings', 
       screen: 'JobManagement',
       badge: '3 Active',
-      onPress: () => navigation.navigate('AllApplications', { jobs: [] })
+      onPress: () => navigation.navigate('AllApplicationScreen', { jobs: [] })
     },
     { 
       icon: 'people-outline', 
@@ -381,7 +381,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 40,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',

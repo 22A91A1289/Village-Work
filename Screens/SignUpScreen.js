@@ -84,7 +84,6 @@ const SignUpScreen = ({ navigation }) => {
   const userTypes = [
     { key: 'worker', label: 'Worker', icon: 'construct', description: 'Find jobs and work opportunities' },
     { key: 'owner', label: 'Recruiter', icon: 'business', description: 'Post jobs and hire workers' },
-    { key: 'admin', label: 'Admin', icon: 'shield', description: 'Platform management and verification' },
   ];
 
   return (
@@ -113,13 +112,13 @@ const SignUpScreen = ({ navigation }) => {
 
           {/* Form */}
           <View style={styles.formContainer}>
-            <Text style={styles.welcomeText}>Join VWork</Text>
+            <Text style={styles.welcomeText}>Join WORKNEX</Text>
             <Text style={styles.subtitleText}>Create your account to get started</Text>
 
             {/* User Type Selection */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>I want to be a:</Text>
-              <Text style={styles.inputSubtext}>Choose how you want to use VWork</Text>
+              <Text style={styles.inputSubtext}>Choose how you want to use WORKNEX</Text>
               <View style={styles.userTypeContainer}>
                 {userTypes.map((type) => (
                   <TouchableOpacity
@@ -310,8 +309,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
+    paddingTop: 40,
+    paddingBottom: 15,
   },
   backButton: {
     padding: 8,

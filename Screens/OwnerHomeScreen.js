@@ -358,20 +358,20 @@ const OwnerHomeScreen = ({ navigation }) => {
   };
 
   const handleJobPress = (job) => {
-    navigation.navigate('JobManagement', { job });
+    navigation.navigate('JobManagementScreen', { job });
   };
 
   const handleViewApplications = (job) => {
-    navigation.navigate('Applications', { job });
+    navigation.navigate('ApplicationsScreen', { job });
   };
 
   const handleActiveJobsPress = () => {
     const activeJobsList = myPostedJobs.filter(job => job.status === 'Active');
-    navigation.navigate('ActiveJobs', { jobs: activeJobsList });
+    navigation.navigate('ActiveJobScreen', { jobs: activeJobsList });
   };
 
   const handleApplicationsPress = () => {
-    navigation.navigate('AllApplications', { jobs: myPostedJobs });
+    navigation.navigate('AllApplicationScreen', { jobs: myPostedJobs });
   };
 
   const handleNotificationPress = () => {
@@ -380,7 +380,7 @@ const OwnerHomeScreen = ({ navigation }) => {
   };
 
   const handlePostNewJob = (job, categoryKey) => {
-    navigation.navigate('PostJob', {
+    navigation.navigate('CreateJobScreen', {
       categoryName: job.name,
       categoryIcon: job.icon,
       categoryColor: job.color,
@@ -634,8 +634,8 @@ const OwnerHomeScreen = ({ navigation }) => {
         </View>
         
         <View style={styles.headerCenter}>
-          <Text style={styles.brandTitle}>VWork</Text>
-          <Text style={styles.brandSubtitle}>Quality Work Opportunities</Text>
+          <Text style={styles.brandTitle}>WORKNEX</Text>
+          <Text style={styles.brandSubtitle}>STUDENT EMPLOYMENT PLATFORM</Text>
         </View>
         
         <View style={styles.headerRight}>
@@ -679,7 +679,7 @@ const OwnerHomeScreen = ({ navigation }) => {
           <View style={styles.searchBar}>
             <Ionicons name="search" size={20} color="#9CA3AF" />
             <TextInput
-              placeholder="Search jobs by requirements, location..."
+              placeholder="Search jobs by requirements"
               value={searchText}
               onChangeText={setSearchText}
               style={styles.searchInput}
@@ -697,7 +697,7 @@ const OwnerHomeScreen = ({ navigation }) => {
           <>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>My Posted Jobs</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('AllJobs')}>
+              <TouchableOpacity onPress={handleActiveJobsPress}>
                 <Text style={styles.seeAllText}>View All</Text>
               </TouchableOpacity>
             </View>
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 40,
     paddingBottom: 15,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -785,16 +785,16 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   headerLeft: {
-    flex: 1,
     alignItems: 'flex-start',
+    flex: 1,
   },
   headerCenter: {
-    flex: 1,
+    flex: 2,
     alignItems: 'center',
   },
   headerRight: {
-    flex: 1,
     alignItems: 'flex-end',
+    flex: 1,
   },
   locationButton: {
     flexDirection: 'row',
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   brandTitle: {
-    fontSize: 18, // Reduced from 22
+    fontSize: 18,
     fontWeight: '800',
     color: '#4F46E5',
     textAlign: 'center',

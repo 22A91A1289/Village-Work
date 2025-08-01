@@ -15,32 +15,9 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SkillAssessmentScreen = ({ navigation }) => {
-  const [selectedLevel, setSelectedLevel] = useState(null);
   const [showTestRegistration, setShowTestRegistration] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [availableTesters, setAvailableTesters] = useState([]);
-
-  const experienceLevels = [
-    {
-      id: 'new',
-      title: 'I am New',
-      subtitle: 'No experience in technical work',
-      description: 'Perfect for beginners. You\'ll see helper jobs and daily work opportunities.',
-      icon: 'school',
-      color: '#10B981',
-      jobs: ['Daily Work', 'Helper Jobs'],
-    },
-    {
-      id: 'experienced',
-      title: 'I am Experienced',
-      subtitle: 'Have technical skills and experience',
-      description: 'You\'ll need to pass a skill test to access expert-level jobs.',
-      icon: 'construct',
-      color: '#4F46E5',
-      jobs: ['Expert Jobs', 'Technical Work'],
-    },
-  ];
 
   const technicalCategories = [
     { name: 'Electrician', icon: 'flash', color: '#EF4444' },
@@ -83,6 +60,11 @@ const SkillAssessmentScreen = ({ navigation }) => {
   ];
 
   useEffect(() => {
+    // Show category selection modal directly when screen loads
+    setShowTestRegistration(true);
+  }, []);
+
+  useEffect(() => {
     // Filter testers based on selected category
     if (selectedCategory) {
       const filtered = nearbyTesters.filter(tester => 
@@ -92,28 +74,40 @@ const SkillAssessmentScreen = ({ navigation }) => {
     }
   }, [selectedCategory]);
 
-  const handleLevelSelection = async (level) => {
-    setSelectedLevel(level);
-    
-    if (level.id === 'new') {
-      // For new users, directly save and navigate to home
-      try {
-        console.log('Setting user as new worker');
-        await AsyncStorage.setItem('userSkillLevel', 'new');
-        await AsyncStorage.setItem('skillAssessmentCompleted', 'true');
-        console.log('Navigating to WorkerTabs');
-        navigation.replace('WorkerTabs');
-      } catch (error) {
-        console.error('Error saving skill level:', error);
-      }
-    } else {
-      // For experienced users, show test registration
-      setShowTestRegistration(true);
-    }
-  };
 
-  const handleCategorySelection = (category) => {
+  const handleCategorySelection = async (category) => {
     setSelectedCategory(category);
+    
+    // Check if user can retake quiz (1 week cooldown)
+    try {
+      const lastQuizDate = await AsyncStorage.getItem('quizDate');
+      if (lastQuizDate) {
+        const lastDate = new Date(lastQuizDate);
+        const now = new Date();
+        const daysSince = (now - lastDate) / (1000 * 60 * 60 * 24);
+        
+        if (daysSince < 7) {
+          const daysRemaining = Math.ceil(7 - daysSince);
+          Alert.alert(
+            'Retake Available Soon',
+            `You can retake the quiz in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''}.\n\nFor now, you'll see daily work opportunities.`,
+            [
+              { text: 'OK', onPress: () => navigation.replace('WorkerTabNavigator') }
+            ]
+          );
+          return;
+        }
+      }
+      
+      // Navigate to quiz screen
+      navigation.navigate('QuizScreen', { category });
+      setShowTestRegistration(false);
+    } catch (error) {
+      console.error('Error checking quiz date:', error);
+      // Navigate to quiz anyway
+      navigation.navigate('QuizScreen', { category });
+      setShowTestRegistration(false);
+    }
   };
 
   const handleTestRegistration = async (tester) => {
@@ -157,196 +151,79 @@ const SkillAssessmentScreen = ({ navigation }) => {
     );
   };
 
-  const handleSkipTest = async () => {
-    Alert.alert(
-      'Skip Skill Test',
-      'You can skip the test for now and access helper jobs. You can take the test later to access expert-level jobs.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Skip for Now',
-          onPress: async () => {
-            try {
-              await AsyncStorage.setItem('userSkillLevel', 'experienced');
-              await AsyncStorage.setItem('skillAssessmentCompleted', 'skipped');
-              navigation.replace('WorkerTabs');
-            } catch (error) {
-              console.error('Error saving skill level:', error);
-            }
-          }
-        }
-      ]
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
       
-      {/* Back Navigation Header */}
-      <View style={styles.navigationHeader}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#374151" />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-      </View>
-      
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Experience Level Selection */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Choose Your Experience Level</Text>
-          <Text style={styles.sectionDescription}>
-            This helps us show you the most suitable job opportunities
-          </Text>
-          
-          {experienceLevels.map((level) => (
-            <TouchableOpacity
-              key={level.id}
-              style={[
-                styles.levelCard,
-                selectedLevel?.id === level.id && styles.selectedLevelCard,
-                { borderColor: level.color }
-              ]}
-              onPress={() => handleLevelSelection(level)}
-            >
-              <View style={styles.levelHeader}>
-                <View style={[styles.levelIcon, { backgroundColor: level.color }]}>
-                  <Ionicons name={level.icon} size={24} color="#FFFFFF" />
-                </View>
-                <View style={styles.levelInfo}>
-                  <Text style={styles.levelTitle}>{level.title}</Text>
-                  <Text style={styles.levelSubtitle}>{level.subtitle}</Text>
-                </View>
-                {selectedLevel?.id === level.id && (
-                  <Ionicons name="checkmark-circle" size={24} color={level.color} />
-                )}
-              </View>
-              <Text style={styles.levelDescription}>{level.description}</Text>
-              
-              <View style={styles.jobsPreview}>
-                <Text style={styles.jobsPreviewTitle}>You'll see:</Text>
-                <View style={styles.jobsList}>
-                  {level.jobs.map((job, index) => (
-                    <View key={index} style={styles.jobTag}>
-                      <Ionicons name="briefcase" size={12} color={level.color} />
-                      <Text style={[styles.jobTagText, { color: level.color }]}>{job}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
+      {/* Test Registration Modal */}
+      <Modal
+        visible={showTestRegistration}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="close" size={24} color="#6B7280" />
             </TouchableOpacity>
-          ))}
-        </View>
+            <Text style={styles.modalTitle}>Skill Assessment</Text>
+            <View style={{ width: 24 }} />
+          </View>
 
-        {/* Test Registration Modal */}
-        <Modal
-          visible={showTestRegistration}
-          animationType="slide"
-          presentationStyle="pageSheet"
-        >
-          <SafeAreaView style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setShowTestRegistration(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>Skill Test Registration</Text>
-              <View style={{ width: 24 }} />
+          <ScrollView style={styles.modalContent}>
+            <View style={styles.modalSection}>
+              <Text style={styles.modalSectionTitle}>Select Your Technical Category</Text>
+              <View style={styles.categoryGrid}>
+                {technicalCategories.map((category, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.categoryOption,
+                      selectedCategory?.name === category.name && styles.selectedCategory,
+                      { borderColor: category.color }
+                    ]}
+                    onPress={() => handleCategorySelection(category)}
+                  >
+                    <Ionicons name={category.icon} size={24} color={category.color} />
+                    <Text style={styles.categoryOptionText}>{category.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
-            <ScrollView style={styles.modalContent}>
+            {selectedCategory && (
               <View style={styles.modalSection}>
-                <Text style={styles.modalSectionTitle}>Select Your Technical Category</Text>
-                <View style={styles.categoryGrid}>
-                  {technicalCategories.map((category, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[
-                        styles.categoryOption,
-                        selectedCategory?.name === category.name && styles.selectedCategory,
-                        { borderColor: category.color }
-                      ]}
-                      onPress={() => handleCategorySelection(category)}
-                    >
-                      <Ionicons name={category.icon} size={24} color={category.color} />
-                      <Text style={styles.categoryOptionText}>{category.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {selectedCategory && (
-                <>
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalSectionTitle}>Enter Your Phone Number</Text>
-                    <Text style={styles.modalSectionDescription}>
-                      We'll use this to contact you about your skill test
-                    </Text>
-                    <TextInput
-                      style={styles.phoneInput}
-                      placeholder="Enter your phone number"
-                      value={phoneNumber}
-                      onChangeText={setPhoneNumber}
-                      keyboardType="phone-pad"
-                    />
-                  </View>
-
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalSectionTitle}>Available Testers Nearby</Text>
-                    <Text style={styles.modalSectionDescription}>
-                      Choose a tester to schedule your skill assessment
-                    </Text>
-                    
-                    {availableTesters.length > 0 ? (
-                      availableTesters.map((tester) => (
-                        <View key={tester.id} style={styles.testerCard}>
-                          <View style={styles.testerHeader}>
-                            <View style={styles.testerInfo}>
-                              <Text style={styles.testerName}>{tester.name}</Text>
-                              <Text style={styles.testerCategory}>{tester.category}</Text>
-                              <View style={styles.testerDetails}>
-                                <Text style={styles.testerDetail}>{tester.experience} experience</Text>
-                                <Text style={styles.testerDetail}>⭐ {tester.rating}</Text>
-                                <Text style={styles.testerDetail}>{tester.distance}</Text>
-                              </View>
-                            </View>
-                            <TouchableOpacity
-                              style={styles.scheduleButton}
-                              onPress={() => handleTestRegistration(tester)}
-                            >
-                              <Text style={styles.scheduleButtonText}>Schedule</Text>
-                            </TouchableOpacity>
-                          </View>
-                          
-                          <View style={styles.slotsContainer}>
-                            <Text style={styles.slotsTitle}>Available slots:</Text>
-                            <View style={styles.slotsList}>
-                              {tester.availableSlots.map((slot, index) => (
-                                <View key={index} style={styles.slotTag}>
-                                  <Text style={styles.slotText}>{slot}</Text>
-                                </View>
-                              ))}
-                            </View>
-                          </View>
-                        </View>
-                      ))
-                    ) : (
-                      <View style={styles.noTesters}>
-                        <Ionicons name="people" size={48} color="#9CA3AF" />
-                        <Text style={styles.noTestersText}>No testers available for this category</Text>
-                        <Text style={styles.noTestersSubtext}>Try another category or check back later</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <TouchableOpacity style={styles.skipButton} onPress={handleSkipTest}>
-                    <Text style={styles.skipButtonText}>Skip Test for Now</Text>
+                <View style={styles.quizInfoCard}>
+                  <Ionicons name="bulb-outline" size={32} color="#4F46E5" />
+                  <Text style={styles.quizInfoTitle}>AI-Generated Skill Quiz</Text>
+                  <Text style={styles.quizInfoText}>
+                    You'll take a {selectedCategory.name} skill assessment with AI-generated questions.
+                  </Text>
+                  <Text style={styles.quizInfoText}>
+                    • 5 questions{'\n'}
+                    • 10 minutes time limit{'\n'}
+                    • 60% required to pass{'\n'}
+                    • Pass = Technical + Daily jobs{'\n'}
+                    • Fail = Daily jobs only
+                  </Text>
+                  <TouchableOpacity 
+                    style={styles.startQuizButton}
+                    onPress={() => handleCategorySelection(selectedCategory)}
+                  >
+                    <Text style={styles.startQuizButtonText}>Start Quiz</Text>
+                    <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                   </TouchableOpacity>
-                </>
-              )}
-            </ScrollView>
-          </SafeAreaView>
-        </Modal>
-      </ScrollView>
+                </View>
+                
+                <TouchableOpacity style={styles.skipButton} onPress={() => navigation.goBack()}>
+                  <Text style={styles.skipButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -359,7 +236,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 40,
     paddingBottom: 30,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
@@ -639,6 +516,44 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     marginTop: 4,
   },
+  quizInfoCard: {
+    backgroundColor: '#F8FAFF',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#4F46E5',
+    marginBottom: 20,
+  },
+  quizInfoTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  quizInfoText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  startQuizButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4F46E5',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  startQuizButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginRight: 8,
+  },
   skipButton: {
     backgroundColor: '#F3F4F6',
     paddingVertical: 16,
@@ -655,7 +570,7 @@ const styles = StyleSheet.create({
   navigationHeader: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 40,
     paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',

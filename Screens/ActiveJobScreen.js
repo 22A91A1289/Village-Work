@@ -1095,7 +1095,7 @@ const ActiveJobsScreen = ({ route, navigation }) => {
   const renderJobCard = ({ item }) => (
     <TouchableOpacity
       style={styles.jobCard}
-      onPress={() => navigation.navigate('JobManagement', { job: item })}
+                      onPress={() => navigation.navigate('JobManagementScreen', { job: item })}
     >
       <View style={styles.jobHeader}>
         <View style={styles.jobTitleContainer}>
@@ -1144,7 +1144,7 @@ const ActiveJobsScreen = ({ route, navigation }) => {
         
         <TouchableOpacity
           style={styles.viewApplicationsButton}
-          onPress={() => navigation.navigate('Applications', { job: item })}
+                          onPress={() => navigation.navigate('ApplicationsScreen', { job: item })}
         >
           <Text style={styles.viewApplicationsText}>View Applications</Text>
           <Ionicons name="chevron-forward" size={16} color="#4F46E5" />
@@ -1165,12 +1165,13 @@ const ActiveJobsScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
       
-      {/* Back Navigation Header */}
-      <View style={styles.navigationHeader}>
+      {/* Header with Back Button */}
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#374151" />
-          <Text style={styles.backText}>Back</Text>
+          <Ionicons name="arrow-back" size={24} color="#1F2937" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Active Jobs</Text>
+        <View style={{ width: 24 }} />
       </View>
       
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -1258,15 +1259,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
-    paddingTop: 20, // Increased top padding to avoid collision with header
   },
-  navigationHeader: {
+  header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 15,
+    paddingTop: 40,
+    paddingBottom: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
@@ -1277,17 +1277,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
+    padding: 4,
   },
-  backText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#374151',
-    fontWeight: '600',
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
   },
   statsHeader: {
     flexDirection: 'row',

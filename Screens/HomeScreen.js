@@ -800,10 +800,14 @@ import {
   Alert,
   StyleSheet,
   Modal,
+  Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { allJobs } from '../data/jobData';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translateJobs } from '../utils/jobTranslations';
 
 const dailyWorkCategories = [
   { name: 'Farming', icon: 'leaf', color: '#10B981', hasSkillLevels: false },
@@ -819,67 +823,17 @@ const technicalWorkCategories = [
   { name: 'Mechanic', icon: 'car-sport', color: '#06B6D4', hasSkillLevels: true, requiresTest: true },
 ];
 
-const nearbyJobs = [
-  {
-    id: 1,
-    title: 'Farm Assistant Needed',
-    location: 'Rajam, Srikakulam',
-    salary: '₹450/day',
-    type: 'Daily Work',
-    timeAgo: '2 hours ago',
-    urgency: 'urgent',
-    description: 'Help with daily farming activities. Training provided for beginners.',
-    skillLevel: 'any', // beginner, intermediate, expert, any
-    requirements: ['Physically fit', 'Available full day'],
-    benefits: ['Daily payment', 'Lunch provided', 'Transport allowance'],
-    postedBy: 'Ramesh Naidu',
-    contact: '9876543210',
-    isApplied: false,
-    trainingProvided: true,
-  },
-  {
-    id: 2,
-    title: 'Experienced Electrician Required',
-    location: 'Kothavalasa',
-    salary: '₹1200/day',
-    type: 'Technical Work',
-    timeAgo: '1 day ago',
-    urgency: 'normal',
-    description: 'Complex home wiring project. Experience mandatory.',
-    skillLevel: 'expert',
-    requirements: ['5+ years experience', 'Own tools', 'Safety certified'],
-    benefits: ['High pay', 'Project bonus', 'Future work opportunities'],
-    postedBy: 'Anil Kumar',
-    contact: '9876501234',
-    isApplied: false,
-    requiresSkillTest: true,
-    testDetails: 'Basic electrical safety and wiring knowledge test',
-  },
-  {
-    id: 3,
-    title: 'Carpenter - All Levels Welcome',
-    location: 'Vizianagaram',
-    salary: '₹600-1000/day',
-    type: 'Technical Work',
-    timeAgo: '3 days ago',
-    urgency: 'normal',
-    description: 'Furniture making project. Beginners can learn, experienced get higher pay.',
-    skillLevel: 'any',
-    requirements: ['Interest in woodworking', 'Basic tool knowledge helpful'],
-    benefits: ['Skill development', 'Variable pay based on skill', 'Weekly bonus'],
-    postedBy: 'Suresh',
-    contact: '9998887777',
-    isApplied: false,
-    hasSkillAssessment: true,
-  },
-];
+// Use shared job data instead of local nearbyJobs
+const nearbyJobs = allJobs;
 
 const HomeScreen = ({ navigation }) => {
+  const { t, language } = useLanguage();
   const [searchText, setSearchText] = useState('');
   const [location, setLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [notifications, setNotifications] = useState(3);
-  const [jobs, setJobs] = useState(nearbyJobs);
+  const [originalJobs, setOriginalJobs] = useState(nearbyJobs); // Store original (untranslated) jobs
+  const [jobs, setJobs] = useState(translateJobs(nearbyJobs, language));
   const [skillModalVisible, setSkillModalVisible] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [userSkillLevel, setUserSkillLevel] = useState('helper');
@@ -923,7 +877,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleJobPress = (job) => {
-    navigation.navigate('JobDetails', { job });
+    navigation.navigate('JobDetailsScreen', { job });
   };
 
   const handleApplyJob = (job) => {
@@ -1026,10 +980,10 @@ const HomeScreen = ({ navigation }) => {
 
   const getSkillLevelText = (level) => {
     switch (level) {
-      case 'helper': return 'Helper';
-      case 'worker': return 'Worker';
-      case 'expert': return 'Expert';
-      default: return 'Any Level';
+      case 'helper': return t('helper');
+      case 'worker': return t('worker');
+      case 'expert': return t('expert');
+      default: return t('anyLevel');
     }
   };
 
@@ -1041,7 +995,7 @@ const HomeScreen = ({ navigation }) => {
   const loadUserData = async () => {
     try {
       const skillLevel = await AsyncStorage.getItem('userSkillLevel');
-      const testStatusValue = await AsyncStorage.getItem('testStatus');
+      const testStatusValue = await AsyncStorage.getItem('skillAssessmentCompleted');
       
       console.log('HomeScreen - Skill Level:', skillLevel);
       console.log('HomeScreen - Test Status:', testStatusValue);
@@ -1064,28 +1018,36 @@ const HomeScreen = ({ navigation }) => {
     
     console.log('Filtering jobs for skill level:', skillLevel, 'test status:', testStatus);
     
-    if (skillLevel === 'new') {
-      // New users see only daily work and helper jobs
+    // Check if user has passed the quiz
+    const hasPassedQuiz = testStatus === 'passed';
+    
+    if (hasPassedQuiz) {
+      // Users who passed quiz see all jobs (Technical + Daily)
+      filteredJobs = nearbyJobs;
+      console.log('User passed quiz - showing all jobs (Technical + Daily):', filteredJobs.length);
+    } else {
+      // All other users (new, failed, pending, skipped, null) see ONLY daily work
+      // Strictly filter out all Technical Work jobs - only show Daily Work type
       filteredJobs = filteredJobs.filter(job => 
-        job.type === 'Daily Work' || job.skillLevel === 'any'
+        job.type === 'Daily Work'
       );
-      console.log('New user - showing', filteredJobs.length, 'jobs');
-    } else if (skillLevel === 'experienced') {
-      if (testStatus === 'passed') {
-        // Experienced users who passed test see all jobs
-        filteredJobs = nearbyJobs;
-        console.log('Experienced user (passed) - showing all jobs');
-      } else if (testStatus === 'pending' || testStatus === 'skipped') {
-        // Experienced users with pending/skipped test see helper jobs and daily work
-        filteredJobs = filteredJobs.filter(job => 
-          job.type === 'Daily Work' || job.skillLevel === 'any' || job.skillLevel === 'helper'
-        );
-        console.log('Experienced user (pending/skipped) - showing', filteredJobs.length, 'jobs');
-      }
+      console.log('User has not passed quiz - showing only daily work:', filteredJobs.length, 'jobs');
+      console.log('Filtered out technical jobs');
     }
     
-    setJobs(filteredJobs);
+    // Store original (untranslated) jobs
+    setOriginalJobs(filteredJobs);
+    // Translate jobs based on current language
+    setJobs(translateJobs(filteredJobs, language));
   };
+
+  // Re-translate jobs when language changes
+  useEffect(() => {
+    if (originalJobs.length > 0) {
+      setJobs(translateJobs(originalJobs, language));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1096,12 +1058,12 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.headerLeft}>
           <Ionicons name="location" size={16} color="#10B981" />
           <Text style={styles.locationText}>
-            {loadingLocation ? 'Locating...' : location || 'Unknown'}
+            {loadingLocation ? t('locating') : location || t('unknownLocation')}
           </Text>
         </View>
         <View style={styles.headerCenter}>
-          <Text style={styles.brandTitle}>VWork</Text>
-          <Text style={styles.brandSubtitle}>Quality Work Opportunities</Text>
+          <Text style={styles.brandTitle}>WORKNEX</Text>
+          <Text style={styles.brandSubtitle}>STUDENT EMPLOYMENT PLATFORM</Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.notificationButton} onPress={() => setNotifications(0)}>
@@ -1121,117 +1083,23 @@ const HomeScreen = ({ navigation }) => {
           <Ionicons name="search" size={20} color="#9CA3AF" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search jobs by requirements, location..."
+            placeholder={t('searchJobs')}
             value={searchText}
             onChangeText={setSearchText}
             onFocus={() => navigation.navigate('Search')}
           />
-          <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="options" size={20} color="#6B7280" />
-          </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Skill Status Card */}
-        <View style={styles.skillCard}>
-          <View style={styles.skillHeader}>
-            <Ionicons name="school" size={24} color="#4F46E5" />
-            <Text style={styles.skillTitle}>Your Skill Status</Text>
-          </View>
-          
-          {userSkillLevel === 'new' ? (
-            <View style={styles.statusContainer}>
-              <View style={styles.statusBadge}>
-                <Ionicons name="person-add" size={16} color="#10B981" />
-                <Text style={styles.statusText}>New Worker</Text>
-              </View>
-              <Text style={styles.statusDescription}>
-                You can access daily work and helper jobs. Great for beginners!
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.statusContainer}>
-              <View style={styles.statusBadge}>
-                <Ionicons name="construct" size={16} color="#4F46E5" />
-                <Text style={styles.statusText}>Experienced Worker</Text>
-              </View>
-              {testStatus === 'pending' && (
-                <View style={styles.testStatusContainer}>
-                  <View style={styles.testStatusBadge}>
-                    <Ionicons name="time" size={14} color="#F59E0B" />
-                    <Text style={styles.testStatusText}>Test Scheduled</Text>
-                  </View>
-                  <Text style={styles.testStatusDescription}>
-                    Your skill test is scheduled. You can access helper jobs while waiting.
-                  </Text>
-                  <TouchableOpacity 
-                    style={styles.testStatusButton}
-                    onPress={() => navigation.navigate('TestStatus')}
-                  >
-                    <Text style={styles.testStatusButtonText}>Check Test Status</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              {testStatus === 'skipped' && (
-                <View style={styles.testStatusContainer}>
-                  <View style={styles.testStatusBadge}>
-                    <Ionicons name="alert-circle" size={14} color="#6B7280" />
-                    <Text style={styles.testStatusText}>Test Skipped</Text>
-                  </View>
-                  <Text style={styles.testStatusDescription}>
-                    You can take the skill test anytime to access expert-level jobs.
-                  </Text>
-                  <TouchableOpacity 
-                    style={styles.testStatusButton}
-                    onPress={() => navigation.navigate('SkillAssessment')}
-                  >
-                    <Text style={styles.testStatusButtonText}>Take Test Now</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              {testStatus === 'passed' && (
-                <View style={styles.testStatusContainer}>
-                  <View style={styles.testStatusBadge}>
-                    <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-                    <Text style={styles.testStatusText}>Test Passed</Text>
-                  </View>
-                  <Text style={styles.testStatusDescription}>
-                    Congratulations! You can access all job levels including expert positions.
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
-
-        {/* Quick Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Ionicons name="briefcase" size={24} color="#4F46E5" />
-            <Text style={styles.statNumber}>47</Text>
-            <Text style={styles.statLabel}>Total Jobs</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Ionicons name="school" size={24} color="#10B981" />
-            <Text style={styles.statNumber}>23</Text>
-            <Text style={styles.statLabel}>With Training</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Ionicons name="star" size={24} color="#F59E0B" />
-            <Text style={styles.statNumber}>18</Text>
-            <Text style={styles.statLabel}>Expert Level</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Ionicons name="checkmark-circle" size={24} color="#EF4444" />
-            <Text style={styles.statNumber}>6</Text>
-            <Text style={styles.statLabel}>With Tests</Text>
-          </View>
-        </View>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
 
         {/* Daily Work Categories */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Daily Work</Text>
+          <Text style={styles.sectionTitle}>{t('availableJobs')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
             {dailyWorkCategories.map((category, index) => (
               <TouchableOpacity
@@ -1242,42 +1110,44 @@ const HomeScreen = ({ navigation }) => {
                 <View style={styles.categoryIconContainer}>
                   <Ionicons name={category.icon} size={32} color="#FFFFFF" />
                 </View>
-                <Text style={styles.categoryName}>{category.name}</Text>
-                <Text style={styles.categorySubtext}>Multiple levels</Text>
+                  <Text style={styles.categoryName}>{t(category.name.toLowerCase())}</Text>
+                <Text style={styles.categorySubtext}>{t('multipleLevels')}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
 
-        {/* Technical Work Categories */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Technical Work</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
-            {technicalWorkCategories.map((category, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => handleCategoryPress(category)}
-                style={[styles.categoryCard, { backgroundColor: category.color }]}
-              >
-                <View style={styles.categoryIconContainer}>
-                  <Ionicons name={category.icon} size={32} color="#FFFFFF" />
-                </View>
-                <Text style={styles.categoryName}>{category.name}</Text>
-                <View style={styles.testBadge}>
-                  <Ionicons name="checkmark-circle" size={12} color="#FFFFFF" />
-                  <Text style={styles.testBadgeText}>Skill Test</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+        {/* Technical Work Categories - Only show if quiz passed */}
+        {testStatus === 'passed' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('technicalWork')}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
+              {technicalWorkCategories.map((category, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleCategoryPress(category)}
+                  style={[styles.categoryCard, { backgroundColor: category.color }]}
+                >
+                  <View style={styles.categoryIconContainer}>
+                    <Ionicons name={category.icon} size={32} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.categoryName}>{t(category.name.toLowerCase())}</Text>
+                  <View style={styles.testBadge}>
+                    <Ionicons name="checkmark-circle" size={12} color="#FFFFFF" />
+                    <Text style={styles.testBadgeText}>{t('skillTestRequired')}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Nearby Jobs */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitleMain}>Nearby Jobs</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AllJobs')}>
-              <Text style={styles.seeAllText}>See All</Text>
+            <Text style={styles.sectionTitleMain}>{t('nearbyJobs')}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+              <Text style={styles.seeAllText}>{t('viewAll')}</Text>
             </TouchableOpacity>
           </View>
           
@@ -1289,10 +1159,10 @@ const HomeScreen = ({ navigation }) => {
             >
               <View style={styles.jobHeader}>
                 <View style={[styles.jobTypeTag, { 
-                  backgroundColor: job.type === 'Daily Work' ? '#F0FDF4' : '#FFF7ED' 
+                  backgroundColor: (job.originalType || job.type) === 'Daily Work' ? '#F0FDF4' : '#FFF7ED' 
                 }]}>
                   <Text style={[styles.jobTypeText, { 
-                    color: job.type === 'Daily Work' ? '#047857' : '#C2410C' 
+                    color: (job.originalType || job.type) === 'Daily Work' ? '#047857' : '#C2410C' 
                   }]}>
                     {job.type}
                   </Text>
@@ -1302,7 +1172,7 @@ const HomeScreen = ({ navigation }) => {
                   {job.urgency === 'urgent' && (
                     <View style={styles.urgentBadge}>
                       <Ionicons name="time" size={10} color="#DC2626" />
-                      <Text style={styles.urgentText}>Urgent</Text>
+                      <Text style={styles.urgentText}>{t('urgent')}</Text>
                     </View>
                   )}
                 </View>
@@ -1323,7 +1193,7 @@ const HomeScreen = ({ navigation }) => {
                 {job.requiresSkillTest && (
                   <View style={styles.testRequired}>
                     <Ionicons name="school" size={14} color="#8B5CF6" />
-                    <Text style={styles.testRequiredText}>Skill Test Required</Text>
+                    <Text style={styles.testRequiredText}>{t('skillTestRequired')}</Text>
                   </View>
                 )}
               </View>
@@ -1362,7 +1232,7 @@ const HomeScreen = ({ navigation }) => {
                     color="#FFFFFF" 
                   />
                   <Text style={styles.applyText}>
-                    {job.isApplied ? 'Applied' : 'Apply Now'}
+                    {job.isApplied ? t('applied') : t('applyNow')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1424,11 +1294,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
+  scrollContent: {
+    paddingBottom: 20,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 40,
     paddingBottom: 15,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -1440,17 +1313,18 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   headerLeft: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   headerCenter: {
-    flex: 1,
+    flex: 2,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   headerRight: {
-    flex: 1,
     alignItems: 'flex-end',
+    flex: 1,
   },
   locationText: {
     fontSize: 14,
@@ -1459,13 +1333,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   brandTitle: {
-    fontSize: 18, // Reduced from 22
+    fontSize: 22,
     fontWeight: '800',
     color: '#1F2937',
     textAlign: 'center',
   },
   brandSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#4F46E5',
     textAlign: 'center',
     marginTop: 2,
@@ -1518,6 +1392,63 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     padding: 4,
+  },
+  assessmentBanner: {
+    backgroundColor: '#F8FAFF',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  assessmentBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#4F46E5',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  assessmentBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  assessmentBannerText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  assessmentBannerTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  assessmentBannerSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  assessmentBannerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4F46E5',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  assessmentBannerButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginRight: 6,
   },
   scrollView: {
     flex: 1,
@@ -1671,6 +1602,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     marginBottom: 16,
+    flexWrap: 'wrap',
   },
   sectionTitle: {
     fontSize: 18,
@@ -1754,6 +1686,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+    flexWrap: 'wrap',
   },
   jobTypeTag: {
     paddingHorizontal: 12,

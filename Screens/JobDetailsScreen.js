@@ -58,7 +58,8 @@ const JobDetailsScreen = ({ route, navigation }) => {
           alignItems: 'center',
           justifyContent: 'space-between',
           paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingTop: 40,
+          paddingBottom: 15,
           borderBottomWidth: 1,
           borderBottomColor: '#F3F4F6',
         }}
@@ -103,13 +104,13 @@ const JobDetailsScreen = ({ route, navigation }) => {
           }}
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1F2937', marginBottom: 4 }}>
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1F2937', marginBottom: 4, flexWrap: 'wrap' }}>
                 {job.title}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                 <Ionicons name="location-outline" size={16} color="#6B7280" />
-                <Text style={{ fontSize: 14, color: '#6B7280', marginLeft: 4 }}>{job.location}</Text>
+                <Text style={{ fontSize: 14, color: '#6B7280', marginLeft: 4, flex: 1 }}>{job.location}</Text>
               </View>
             </View>
             <View style={{ backgroundColor: '#EBF8FF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
@@ -118,8 +119,8 @@ const JobDetailsScreen = ({ route, navigation }) => {
           </View>
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ fontSize: 24, color: '#059669', fontWeight: 'bold' }}>{job.salary}</Text>
-            <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Posted {job.timeAgo}</Text>
+            <Text style={{ fontSize: 24, color: '#059669', fontWeight: 'bold', flex: 1 }}>{job.salary}</Text>
+            <Text style={{ fontSize: 12, color: '#9CA3AF', marginLeft: 8 }}>Posted {job.timeAgo}</Text>
           </View>
         </View>
 

@@ -1,0 +1,260 @@
+.filter-select {
+  padding: 10px 16px;
+  border: 1px solid #D1D5DB;
+  border-radius: 12px;
+  font-size: 15px;
+  background: #FFFFFF;
+  color: #374151;
+  cursor: pointer;
+  min-width: 250px;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.applications-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.application-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  border: 1px solid #F3F4F6;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.application-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.application-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.applicant-info {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.applicant-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.applicant-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.applicant-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 6px 0;
+}
+
+.applicant-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: #6B7280;
+}
+
+.rating {
+  color: #F59E0B;
+  font-weight: 600;
+}
+
+.applicant-location {
+  font-size: 13px;
+  color: #9CA3AF;
+}
+
+.application-job {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.application-job strong {
+  color: #1F2937;
+  font-weight: 600;
+}
+
+.application-skills {
+  margin-bottom: 16px;
+}
+
+.application-skills strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-tag {
+  padding: 6px 12px;
+  background: #EEF2FF;
+  color: #4F46E5;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.application-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #E5E7EB;
+  margin-bottom: 12px;
+}
+
+.application-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #D1D5DB;
+  background: #FFFFFF;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 18px;
+}
+
+.btn-icon:hover {
+  background: #F3F4F6;
+  border-color: #9CA3AF;
+  color: #4F46E5;
+}
+
+.status-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-status.accept {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.btn-status.accept:hover {
+  background: #A7F3D0;
+}
+
+.btn-status.reject {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.btn-status.reject:hover {
+  background: #FECACA;
+}
+
+.btn-status svg {
+  font-size: 18px;
+}
+
+.application-date {
+  font-size: 12px;
+  color: #9CA3AF;
+  text-align: right;
+}
+
+.status-badge.pending {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.status-badge.accepted {
+  background-color: #D1FAE5;
+  color: #065F46;
+}
+
+.status-badge.rejected {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6B7280;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .applications-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .application-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .status-actions {
+    width: 100%;
+  }
+
+  .btn-status {
+    flex: 1;
+    justify-content: center;
+  }
+}

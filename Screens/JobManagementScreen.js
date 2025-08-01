@@ -511,7 +511,7 @@ const JobManagementScreen = ({ route, navigation }) => {
   };
 
   const handleViewApplications = () => {
-    navigation.navigate('Applications', { job });
+            navigation.navigate('ApplicationsScreen', { job });
   };
 
   const handleEditJob = () => {
@@ -753,7 +753,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 40,
     paddingBottom: 15,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,

@@ -1,7 +1,11 @@
-
 import React from 'react';
 import AppNavigator from './navigation/AppNavigator';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 export default function App() {
-  return <AppNavigator />;
+  return (
+    <LanguageProvider>
+      <AppNavigator />
+    </LanguageProvider>
+  );
 }

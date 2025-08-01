@@ -127,12 +127,13 @@ const CreateJobScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      {/* Back Navigation Header */}
+      {/* Header with Back Button */}
       <View style={styles.navigationHeader}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#374151" />
-          <Text style={styles.backText}>Back</Text>
+          <Ionicons name="arrow-back" size={24} color="#1F2937" />
         </TouchableOpacity>
+        <Text style={styles.navigationTitle}>Create New Job</Text>
+        <View style={{ width: 24 }} />
       </View>
       
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -251,12 +252,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
-    paddingTop: 20, // Increased top padding to avoid collision with header
   },
   navigationHeader: {
-    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingTop: 40,
+    paddingBottom: 15,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -264,13 +270,12 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    padding: 4,
   },
-  backText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#374151',
+  navigationTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
   },
   header: {
     backgroundColor: '#FFFFFF',
