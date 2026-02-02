@@ -11,6 +11,7 @@ import {
   IoChevronForwardOutline
 } from 'react-icons/io5';
 import './Layout.css';
+import { clearAuth } from '../services/api';
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -18,8 +19,8 @@ const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userRole');
+    clearAuth();
+    window.dispatchEvent(new Event('authChange'));
     navigate('/login');
   };
 

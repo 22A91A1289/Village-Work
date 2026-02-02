@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { api, setAuth } from '../utils/api';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -77,28 +78,46 @@ const LoginScreen = ({ navigation }) => {
     }
 
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // For demo purposes, accept any email/password
-      if (selectedRole === 'recruiter' || selectedRole === 'owner') {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'OwnerTabNavigator' }],
-        });
-      } else {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'WorkerTabNavigator' }],
-        });
+
+    try {
+      const result = await api.post('/api/auth/login', {
+        email: email.trim().toLowerCase(),
+        password: password,
+      });
+
+      // Check if this is an employer account
+      if (result.user?.role === 'owner') {
+        // Don't save auth for employers - redirect to web
+        Alert.alert(
+          'Employer Account Detected',
+          'This mobile app is for workers only. Employers should use the Web Dashboard at http://localhost:3000',
+          [{ text: 'OK' }]
+        );
+        return;
       }
-    }, 1500);
+
+      // Save auth for worker accounts (persistent login)
+      await setAuth(result.token, result.user);
+      await AsyncStorage.setItem('userRole', 'worker');
+      
+      // Set default skill level if not exists
+      const existingSkillLevel = await AsyncStorage.getItem('userSkillLevel');
+      if (!existingSkillLevel) {
+        await AsyncStorage.setItem('userSkillLevel', 'new');
+        await AsyncStorage.setItem('skillAssessmentCompleted', 'pending');
+      }
+
+      // Navigate to worker app - session persists until logout
+      navigation.reset({ index: 0, routes: [{ name: 'WorkerTabNavigator' }] });
+    } catch (err) {
+      Alert.alert('Login Failed', err?.message || 'Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
-    Alert.alert('Forgot Password', 'Password reset functionality will be implemented');
+    navigation.navigate('ForgotPasswordScreen');
   };
 
   const handleSignUp = () => {
@@ -119,14 +138,6 @@ const LoginScreen = ({ navigation }) => {
         >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity 
-              onPress={() => navigation.goBack()} 
-              style={styles.backButton}
-            >
-              <Ionicons name="arrow-back" size={24} color="#374151" />
-              <Text style={styles.backText}>Back</Text>
-            </TouchableOpacity>
-            
             <View style={styles.logoContainer}>
               <View style={styles.logo}>
                 <Ionicons name="construct" size={40} color="#4F46E5" />
@@ -216,17 +227,6 @@ const LoginScreen = ({ navigation }) => {
                   <Text style={styles.loginButtonText}>Sign In</Text>
                 </>
               )}
-            </TouchableOpacity>
-
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <TouchableOpacity style={styles.googleButton}>
-              <Ionicons name="logo-google" size={20} color="#DB4437" />
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
             </TouchableOpacity>
 
             <View style={styles.signUpContainer}>

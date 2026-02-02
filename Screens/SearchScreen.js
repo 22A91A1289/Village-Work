@@ -9,16 +9,32 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { searchJobs } from '../data/jobData';
+import { api } from '../utils/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SearchScreen = ({ navigation, route }) => {
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [testStatus, setTestStatus] = useState(null);
 
-  const handleSearch = (text) => {
+  useEffect(() => {
+    loadUserTestStatus();
+  }, []);
+
+  const loadUserTestStatus = async () => {
+    try {
+      const status = await AsyncStorage.getItem('skillAssessmentCompleted');
+      setTestStatus(status);
+    } catch (error) {
+      console.error('Error loading test status:', error);
+    }
+  };
+
+  const handleSearch = async (text) => {
     setSearchText(text);
     if (text.trim() === '') {
       setSearchResults([]);
@@ -27,32 +43,76 @@ const SearchScreen = ({ navigation, route }) => {
 
     setIsLoading(true);
     
-    // Simulate search delay
-    setTimeout(() => {
-      const filtered = searchJobs(text);
-      setSearchResults(filtered);
+    try {
+      // Fetch all jobs from backend
+      const backendJobs = await api.get('/api/jobs', { auth: false });
+      
+      if (backendJobs && backendJobs.length > 0) {
+        // Transform backend jobs
+        const transformedJobs = backendJobs.map(job => ({
+          id: job._id,
+          _id: job._id, // Keep _id for API calls
+          title: job.title,
+          location: job.location,
+          salary: job.salary,
+          type: job.type,
+          category: job.category,
+          description: job.description,
+          requirements: job.requirements || [],
+          benefits: job.benefits || [],
+          postedBy: job.postedBy?.name || 'Unknown',
+          contact: job.postedBy?.phone || '',
+          urgency: job.urgency || 'normal',
+          timeAgo: job.createdAt ? getTimeAgo(new Date(job.createdAt)) : 'Recently',
+        }));
+
+        // Filter by quiz status
+        let filteredByQuiz = transformedJobs;
+        if (testStatus !== 'passed') {
+          filteredByQuiz = transformedJobs.filter(job => job.type === 'Daily Work');
+        }
+
+        // Search filter
+        const searchLower = text.toLowerCase();
+        const filtered = filteredByQuiz.filter(job => 
+          job.title.toLowerCase().includes(searchLower) ||
+          job.location.toLowerCase().includes(searchLower) ||
+          job.category.toLowerCase().includes(searchLower) ||
+          job.description.toLowerCase().includes(searchLower)
+        );
+
+        setSearchResults(filtered);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Error searching jobs:', error);
+      setSearchResults([]);
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
+  };
+
+  const getTimeAgo = (date) => {
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return 'Just now';
   };
 
   const handleJobPress = (job) => {
     navigation.navigate('JobDetailsScreen', { job });
   };
 
-  const handleApplyJob = (job) => {
-    Alert.alert(
-      'Apply for Job',
-      `Apply for "${job.title}" posted by ${job.postedBy}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Apply',
-          onPress: () => {
-            Alert.alert('Success', 'Your application has been submitted!');
-          }
-        }
-      ]
-    );
+  const handleViewDetails = (job) => {
+    // Navigate to job details screen where user can apply
+    navigation.navigate('JobDetailsScreen', { job });
   };
 
   return (
@@ -96,7 +156,8 @@ const SearchScreen = ({ navigation, route }) => {
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Searching...</Text>
+            <ActivityIndicator size="large" color="#4F46E5" />
+            <Text style={styles.loadingText}>Searching jobs...</Text>
           </View>
         ) : searchText.length > 0 && searchResults.length === 0 ? (
           <View style={styles.noResultsContainer}>
@@ -125,9 +186,12 @@ const SearchScreen = ({ navigation, route }) => {
                 <Text style={styles.jobTitle}>{job.title}</Text>
                 <TouchableOpacity
                   style={styles.applyButton}
-                  onPress={() => handleApplyJob(job)}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleViewDetails(job);
+                  }}
                 >
-                  <Text style={styles.applyButtonText}>Apply</Text>
+                  <Text style={styles.applyButtonText}>View Details</Text>
                 </TouchableOpacity>
               </View>
               

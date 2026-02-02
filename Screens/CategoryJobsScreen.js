@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,23 +8,95 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getJobsByCategory } from '../data/jobData';
+import { api } from '../utils/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CategoryJobsScreen = ({ route, navigation }) => {
   const { categoryName, categoryIcon } = route.params;
+  const [categoryJobs, setCategoryJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [testStatus, setTestStatus] = useState(null);
 
-  // Get jobs for this category from shared data
-  const categoryJobs = getJobsByCategory(categoryName);
+  useEffect(() => {
+    loadCategoryJobs();
+  }, [categoryName]);
+
+  const loadCategoryJobs = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Load user test status
+      const status = await AsyncStorage.getItem('skillAssessmentCompleted');
+      setTestStatus(status);
+      
+      // Fetch jobs from backend
+      const backendJobs = await api.get('/api/jobs', { auth: false });
+      
+      if (backendJobs && backendJobs.length > 0) {
+        // Transform and filter jobs
+        const transformedJobs = backendJobs.map(job => ({
+          id: job._id,
+          _id: job._id, // Keep _id for API calls
+          title: job.title,
+          location: job.location,
+          salary: job.salary,
+          type: job.type,
+          category: job.category,
+          description: job.description,
+          requirements: job.requirements || [],
+          benefits: job.benefits || [],
+          postedBy: job.postedBy?.name || 'Unknown',
+          contact: job.postedBy?.phone || '',
+          urgency: job.urgency || 'normal',
+          timeAgo: job.createdAt ? getTimeAgo(new Date(job.createdAt)) : 'Recently',
+        }));
+
+        // Filter by quiz status
+        let filteredByQuiz = transformedJobs;
+        if (status !== 'passed') {
+          filteredByQuiz = transformedJobs.filter(job => job.type === 'Daily Work');
+        }
+
+        // Filter by category
+        const categoryFiltered = filteredByQuiz.filter(job => 
+          job.category && job.category.toLowerCase() === categoryName.toLowerCase()
+        );
+
+        setCategoryJobs(categoryFiltered);
+      } else {
+        setCategoryJobs([]);
+      }
+    } catch (error) {
+      console.error('Error loading category jobs:', error);
+      setCategoryJobs([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTimeAgo = (date) => {
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return 'Just now';
+  };
 
   const handleJobPress = (job) => {
     navigation.navigate('JobDetailsScreen', { job });
   };
 
-  const handleApplyJob = (jobId) => {
-    // Handle job application
-    console.log('Applied for job:', jobId);
+  const handleViewDetails = (job) => {
+    // Navigate to job details to apply
+    navigation.navigate('JobDetailsScreen', { job });
   };
 
   return (
@@ -49,7 +121,27 @@ const CategoryJobsScreen = ({ route, navigation }) => {
 
       {/* Job List */}
       <ScrollView showsVerticalScrollIndicator={false} style={styles.jobList}>
-        {categoryJobs.map((job) => (
+        {/* Loading State */}
+        {isLoading && (
+          <View style={styles.emptyState}>
+            <ActivityIndicator size="large" color="#4F46E5" />
+            <Text style={styles.emptyStateText}>Loading {categoryName} jobs...</Text>
+          </View>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && categoryJobs.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="briefcase-outline" size={64} color="#D1D5DB" />
+            <Text style={styles.emptyStateTitle}>No {categoryName} Jobs Available</Text>
+            <Text style={styles.emptyStateText}>
+              Check back later or employers can post jobs from the Web Dashboard
+            </Text>
+          </View>
+        )}
+
+        {/* Jobs List */}
+        {!isLoading && categoryJobs.map((job) => (
           <TouchableOpacity
             key={job.id}
             onPress={() => handleJobPress(job)}
@@ -111,11 +203,11 @@ const CategoryJobsScreen = ({ route, navigation }) => {
                 style={styles.applyButton}
                 onPress={(e) => {
                   e.stopPropagation();
-                  handleApplyJob(job.id);
+                  handleViewDetails(job);
                 }}
               >
-                <Ionicons name="paper-plane" size={16} color="#FFFFFF" />
-                <Text style={styles.applyText}>Apply Now</Text>
+                <Ionicons name="eye-outline" size={16} color="#FFFFFF" />
+                <Text style={styles.applyText}>View Details</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -347,6 +439,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 6,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+    paddingHorizontal: 40,
+    marginHorizontal: 20,
+    marginTop: 40,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
 

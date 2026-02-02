@@ -801,44 +801,69 @@ import {
   StyleSheet,
   Modal,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { allJobs } from '../data/jobData';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translateJobs } from '../utils/jobTranslations';
+import { api } from '../utils/api';
 
 const dailyWorkCategories = [
   { name: 'Farming', icon: 'leaf', color: '#10B981', hasSkillLevels: false },
   { name: 'Construction', icon: 'hammer', color: '#F59E0B', hasSkillLevels: true },
   { name: 'Cleaning', icon: 'brush', color: '#6366F1', hasSkillLevels: false },
   { name: 'Housekeeping', icon: 'home', color: '#EC4899', hasSkillLevels: false },
+  { name: 'Welder', icon: 'flame', color: '#EF4444', hasSkillLevels: false },
+  { name: 'Painter', icon: 'color-palette', color: '#8B5CF6', hasSkillLevels: false },
 ];
 
-const technicalWorkCategories = [
-  { name: 'Electrician', icon: 'flash', color: '#EF4444', hasSkillLevels: true, requiresTest: true },
+// Category icon and color mapping
+const categoryIconMap = {
+  'Electrician': { icon: 'flash', color: '#EF4444' },
+  'Plumber': { icon: 'water', color: '#3B82F6' },
+  'Carpenter': { icon: 'construct', color: '#8B5CF6' },
+  'Mechanic': { icon: 'car-sport', color: '#06B6D4' },
+  'Welder': { icon: 'flame', color: '#F97316' },
+  'Painter': { icon: 'color-palette', color: '#EC4899' },
+  'Mason': { icon: 'home', color: '#64748B' },
+  'Finance': { icon: 'cash', color: '#10B981' },
+  'Accounts': { icon: 'calculator', color: '#059669' },
+  'Computer': { icon: 'desktop', color: '#6366F1' },
+  'Data Entry': { icon: 'document-text', color: '#8B5CF6' },
+  'Excel': { icon: 'stats-chart', color: '#10B981' },
+  'Typing': { icon: 'create', color: '#3B82F6' },
+  'Office Work': { icon: 'briefcase', color: '#6366F1' },
+  // Default for any other category
+  'default': { icon: 'hammer', color: '#64748B' }
+};
+
+// Default technical categories - always shown
+const defaultTechnicalCategories = [
+  { name: 'Electrician', icon: 'flash', color: '#F59E0B', hasSkillLevels: true, requiresTest: true },
   { name: 'Plumber', icon: 'water', color: '#3B82F6', hasSkillLevels: true, requiresTest: true },
-  { name: 'Carpenter', icon: 'construct', color: '#8B5CF6', hasSkillLevels: true, requiresTest: true },
-  { name: 'Mechanic', icon: 'car-sport', color: '#06B6D4', hasSkillLevels: true, requiresTest: true },
+  { name: 'Carpenter', icon: 'hammer', color: '#8B4513', hasSkillLevels: true, requiresTest: true },
+  { name: 'Mechanic', icon: 'build', color: '#6B7280', hasSkillLevels: true, requiresTest: true },
+  { name: 'Data Entry', icon: 'document-text', color: '#10B981', hasSkillLevels: true, requiresTest: true },
 ];
-
-// Use shared job data instead of local nearbyJobs
-const nearbyJobs = allJobs;
 
 const HomeScreen = ({ navigation }) => {
   const { t, language } = useLanguage();
   const [searchText, setSearchText] = useState('');
   const [location, setLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
-  const [notifications, setNotifications] = useState(3);
-  const [originalJobs, setOriginalJobs] = useState(nearbyJobs); // Store original (untranslated) jobs
-  const [jobs, setJobs] = useState(translateJobs(nearbyJobs, language));
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [originalJobs, setOriginalJobs] = useState([]); // Start with empty array - only backend jobs
+  const [jobs, setJobs] = useState([]);
   const [skillModalVisible, setSkillModalVisible] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [userSkillLevel, setUserSkillLevel] = useState('helper');
   const [skillAssessmentCompleted, setSkillAssessmentCompleted] = useState(false);
   const [testStatus, setTestStatus] = useState(null);
+  const [loadingJobs, setLoadingJobs] = useState(false);
+  const [technicalCategories, setTechnicalCategories] = useState(defaultTechnicalCategories); // Start with defaults
+  const [userSkills, setUserSkills] = useState({}); // { categoryName: { passed: true/false, attempted: true/false } }
 
   const fetchLocation = async () => {
     try {
@@ -867,44 +892,64 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleCategoryPress = (category) => {
-    navigation.navigate('CategoryJobs', {
-      categoryName: category.name,
-      categoryIcon: category.icon,
-      hasSkillLevels: category.hasSkillLevels,
-      requiresTest: category.requiresTest,
-    });
+  const handleCategoryPress = async (category) => {
+    // Daily Work - always accessible
+    if (!category.requiresTest) {
+      navigation.navigate('CategoryJobs', {
+        categoryName: category.name,
+        categoryIcon: category.icon,
+        hasSkillLevels: category.hasSkillLevels,
+        requiresTest: false,
+      });
+      return;
+    }
+
+    // Technical Work - check skill status
+    const skillStatus = userSkills[category.name];
+    
+    if (skillStatus?.passed) {
+      // Skill test passed - allow access to jobs
+      navigation.navigate('CategoryJobs', {
+        categoryName: category.name,
+        categoryIcon: category.icon,
+        hasSkillLevels: category.hasSkillLevels,
+        requiresTest: category.requiresTest,
+      });
+    } else if (skillStatus?.attempted && !skillStatus?.passed) {
+      // Skill test failed - locked
+      Alert.alert(
+        `${category.name} Skills Locked`,
+        `You attempted the ${category.name} skill test but didn't pass. This skill remains locked.\n\nYou can still attempt tests for other skills.`,
+        [{ text: 'OK' }]
+      );
+    } else {
+      // Not attempted yet - offer to take skill test
+      Alert.alert(
+        `${category.name} Skill Test`,
+        `To access ${category.name} jobs, you need to pass a skill test for this category.\n\nYou get 1 attempt. Pass = Unlock jobs`,
+        [
+          { text: 'Later', style: 'cancel' },
+          {
+            text: 'Take Test',
+            onPress: () => {
+              navigation.navigate('QuizScreen', {
+                category: { name: category.name, icon: category.icon }
+              });
+            }
+          }
+        ]
+      );
+    }
   };
 
   const handleJobPress = (job) => {
     navigation.navigate('JobDetailsScreen', { job });
   };
 
-  const handleApplyJob = (job) => {
-    if (job.requiresSkillTest || job.hasSkillAssessment) {
-      setSelectedJob(job);
-      setSkillModalVisible(true);
-    } else {
-      // Direct application for non-technical jobs
-      Alert.alert(
-        'Apply for Job',
-        `Apply for "${job.title}"?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Apply',
-            onPress: () => {
-              setJobs(prevJobs =>
-                prevJobs.map(j =>
-                  j.id === job.id ? { ...j, isApplied: true } : j
-                )
-              );
-              Alert.alert('Success', 'Application submitted successfully!');
-            }
-          }
-        ]
-      );
-    }
+  const handleViewDetails = (job) => {
+    // Always navigate to job details screen
+    // User can see full details and apply from there
+    handleJobPress(job);
   };
 
   const handleSkillAssessment = (skillLevel) => {
@@ -928,7 +973,8 @@ const HomeScreen = ({ navigation }) => {
       return;
     }
 
-    if (selectedJob.requiresSkillTest && skillLevel !== 'helper') {
+    // Check if user needs skill test (only show if quiz not passed)
+    if (selectedJob.requiresSkillTest && skillLevel !== 'helper' && testStatus !== 'passed') {
       Alert.alert(
         'Skill Test Required',
         `This job requires a skill test. You'll be connected with a nearby ${selectedJob.type.toLowerCase()} expert for assessment.`,
@@ -959,7 +1005,7 @@ const HomeScreen = ({ navigation }) => {
         ]
       );
     } else {
-      // Direct application based on skill level
+      // Direct application - allowed for helpers or users who passed quiz
       setJobs(prevJobs =>
         prevJobs.map(j =>
           j.id === selectedJob.id ? { ...j, isApplied: true } : j
@@ -987,56 +1033,280 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+  const loadUserSkills = async () => {
+    try {
+      const authToken = await AsyncStorage.getItem('authToken');
+      if (!authToken) {
+        console.log('No auth token - user skills not loaded');
+        return;
+      }
+
+      // Fetch all quiz results for this user
+      const quizResults = await api.get('/api/quiz/my-results', { auth: true });
+      
+      // Build skill status map
+      const skillsMap = {};
+      quizResults.forEach(quiz => {
+        if (quiz.category) {
+          skillsMap[quiz.category] = {
+            passed: quiz.passed,
+            attempted: true,
+            score: quiz.score,
+            totalQuestions: quiz.totalQuestions,
+            percentage: quiz.percentage
+          };
+        }
+      });
+      
+      setUserSkills(skillsMap);
+      console.log('📚 User skills loaded:', Object.keys(skillsMap));
+    } catch (error) {
+      console.error('Error loading user skills:', error);
+      setUserSkills({});
+    }
+  };
+
   useEffect(() => {
     loadUserData();
     fetchLocation();
+    fetchJobsFromBackend();
+    loadUserSkills();
+    fetchUnreadNotifications();
+
+    // Set up polling for real-time notifications (every 30 seconds)
+    const notificationInterval = setInterval(() => {
+      fetchUnreadNotifications();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(notificationInterval);
   }, []);
+
+  // Refresh when screen comes into focus (e.g., returning from quiz or notifications)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('HomeScreen focused - refreshing data');
+      loadUserData();
+      fetchJobsFromBackend();
+      loadUserSkills();  // Reload skills when returning from quiz
+      fetchUnreadNotifications(); // Refresh notification count
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  // Re-filter jobs whenever testStatus changes (originalJobs is used directly, not as dependency)
+  useEffect(() => {
+    if (originalJobs.length > 0) {
+      console.log('🔄 Re-filtering jobs - testStatus:', testStatus, 'jobs:', originalJobs.length);
+      filterJobsBySkillLevel(userSkillLevel, testStatus);
+    }
+  }, [testStatus]);
+
+  // Fetch jobs from backend API
+  const fetchJobsFromBackend = async () => {
+    try {
+      setLoadingJobs(true);
+      // Fetch jobs without authentication (public endpoint)
+      const backendJobs = await api.get('/api/jobs', { auth: false });
+      
+      if (backendJobs && backendJobs.length > 0) {
+        // Transform backend jobs to match frontend format
+        const transformedJobs = backendJobs.map(job => ({
+          id: job._id,
+          _id: job._id, // Keep _id for API calls
+          title: job.title,
+          location: job.location,
+          salary: job.salary,
+          type: job.type,
+          category: job.category,
+          description: job.description,
+          requirements: job.requirements || [],
+          benefits: job.benefits || [],
+          experienceLevel: job.experienceLevel || 'any',
+          trainingProvided: job.trainingProvided || false,
+          postedBy: job.postedBy?.name || 'Unknown',
+          contact: job.postedBy?.phone || '',
+          isApplied: false,
+          urgency: job.urgency || 'normal',
+          status: job.status || 'active',
+          createdAt: job.createdAt,
+          // Add computed fields
+          timeAgo: job.createdAt ? getTimeAgo(new Date(job.createdAt)) : 'Recently',
+          // Any Technical Work job requires skill test (quiz)
+          requiresSkillTest: job.type === 'Technical Work',
+          hasSkillAssessment: job.type === 'Technical Work'
+        }));
+        
+        // Update jobs state - filter based on current quiz status
+        setOriginalJobs(transformedJobs);
+        
+        // Extract unique technical categories from jobs
+        const technicalJobs = transformedJobs.filter(job => job.type === 'Technical Work');
+        const uniqueCategories = [...new Set(technicalJobs.map(job => job.category))].filter(Boolean);
+        
+        // Map backend categories to display format
+        const backendCategories = uniqueCategories.map(categoryName => {
+          const iconData = categoryIconMap[categoryName] || categoryIconMap['default'];
+          return {
+            name: categoryName,
+            icon: iconData.icon,
+            color: iconData.color,
+            hasSkillLevels: true,
+            requiresTest: true
+          };
+        });
+        
+        // Merge default categories with backend categories (remove duplicates)
+        const allCategoryNames = new Set([
+          ...defaultTechnicalCategories.map(c => c.name),
+          ...backendCategories.map(c => c.name)
+        ]);
+        
+        const mergedCategories = Array.from(allCategoryNames).map(categoryName => {
+          // Prefer backend category if it exists, otherwise use default
+          const backendCat = backendCategories.find(c => c.name === categoryName);
+          const defaultCat = defaultTechnicalCategories.find(c => c.name === categoryName);
+          return backendCat || defaultCat;
+        }).filter(Boolean);
+        
+        setTechnicalCategories(mergedCategories);
+        console.log('📊 Technical categories (default + backend):', mergedCategories.length, mergedCategories.map(c => c.name));
+        
+        // Filter jobs with current testStatus
+        filterJobsBySkillLevel(userSkillLevel, testStatus, transformedJobs);
+      } else {
+        // No jobs from backend - keep default technical categories, show empty state for jobs
+        console.log('No jobs available from backend - showing default technical categories');
+        setOriginalJobs([]);
+        setJobs([]);
+        setTechnicalCategories(defaultTechnicalCategories);
+      }
+    } catch (error) {
+      console.error('Error fetching jobs from backend:', error);
+      // Show empty state on error - keep default technical categories
+      setOriginalJobs([]);
+      setJobs([]);
+      setTechnicalCategories(defaultTechnicalCategories);
+    } finally {
+      setLoadingJobs(false);
+    }
+  };
+
+  // Helper function to calculate time ago
+  const getTimeAgo = (date) => {
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return 'Just now';
+  };
+
+  // Fetch unread notifications count
+  const fetchUnreadNotifications = async () => {
+    try {
+      const authToken = await AsyncStorage.getItem('authToken');
+      if (!authToken) {
+        return; // Guest users don't have notifications
+      }
+
+      const response = await api.get('/api/notifications/unread-count', { auth: true });
+      if (response.success) {
+        setUnreadNotifications(response.unreadCount);
+      }
+    } catch (error) {
+      // Silently fail - notifications not critical
+      console.log('Could not fetch notification count');
+    }
+  };
 
   const loadUserData = async () => {
     try {
+      // First check AsyncStorage for quick load
       const skillLevel = await AsyncStorage.getItem('userSkillLevel');
       const testStatusValue = await AsyncStorage.getItem('skillAssessmentCompleted');
+      const authToken = await AsyncStorage.getItem('authToken');
       
-      console.log('HomeScreen - Skill Level:', skillLevel);
-      console.log('HomeScreen - Test Status:', testStatusValue);
+      console.log('HomeScreen - Skill Level (local):', skillLevel);
+      console.log('HomeScreen - Test Status (local):', testStatusValue);
+      console.log('HomeScreen - Has Auth Token:', !!authToken);
       
+      // Only fetch from backend if user is logged in
+      if (authToken) {
+        try {
+          const userProfile = await api.get('/api/auth/me', { auth: true });
+          if (userProfile) {
+            console.log('HomeScreen - User Profile from backend:', userProfile);
+            
+            // Update state with backend data
+            const backendSkillLevel = userProfile.skillLevel || skillLevel || 'new';
+            const backendQuizPassed = userProfile.quizPassed || false;
+            const backendTestStatus = backendQuizPassed ? 'passed' : (testStatusValue || 'pending');
+            
+            setUserSkillLevel(backendSkillLevel);
+            setTestStatus(backendTestStatus);
+            setSkillAssessmentCompleted(true);
+            
+            // Update AsyncStorage with backend data
+            await AsyncStorage.setItem('userSkillLevel', backendSkillLevel);
+            await AsyncStorage.setItem('skillAssessmentCompleted', backendTestStatus);
+            await AsyncStorage.setItem('quizPassed', backendQuizPassed ? 'true' : 'false');
+            
+            // Jobs will be filtered by useEffect when testStatus is updated
+            return;
+          }
+        } catch (apiError) {
+          console.log('Not logged in or token expired, using guest mode');
+          // User not logged in - that's okay, show guest view
+        }
+      }
+      
+      // Fallback to AsyncStorage data or default guest values
       setUserSkillLevel(skillLevel || 'new');
-      setTestStatus(testStatusValue);
-      setSkillAssessmentCompleted(true);
+      setTestStatus(testStatusValue || 'pending');
+      setSkillAssessmentCompleted(false);
       
-      // Filter jobs based on skill level and test status
-      filterJobsBySkillLevel(skillLevel, testStatusValue);
+      // Jobs will be filtered by useEffect when testStatus is updated
     } catch (error) {
       console.error('Error loading user data:', error);
+      // Set default guest values on error
+      setUserSkillLevel('new');
+      setTestStatus('pending');
+      setSkillAssessmentCompleted(false);
+      // Jobs will be filtered by useEffect when testStatus is updated
     }
   };
 
 
 
-  const filterJobsBySkillLevel = (skillLevel, testStatus) => {
-    let filteredJobs = [...nearbyJobs];
+  const filterJobsBySkillLevel = (skillLevel, testStatus, jobsToFilter = null) => {
+    // Use provided jobs or current originalJobs (raw backend jobs)
+    const rawJobs = jobsToFilter || originalJobs;
     
     console.log('Filtering jobs for skill level:', skillLevel, 'test status:', testStatus);
+    console.log('Total jobs before filter:', rawJobs.length);
     
     // Check if user has passed the quiz
     const hasPassedQuiz = testStatus === 'passed';
     
+    let filteredJobs;
     if (hasPassedQuiz) {
       // Users who passed quiz see all jobs (Technical + Daily)
-      filteredJobs = nearbyJobs;
-      console.log('User passed quiz - showing all jobs (Technical + Daily):', filteredJobs.length);
+      filteredJobs = rawJobs;
+      console.log('✅ User passed quiz - showing all jobs (Technical + Daily):', filteredJobs.length);
+      console.log('Technical work categories will be visible');
     } else {
       // All other users (new, failed, pending, skipped, null) see ONLY daily work
       // Strictly filter out all Technical Work jobs - only show Daily Work type
-      filteredJobs = filteredJobs.filter(job => 
-        job.type === 'Daily Work'
-      );
-      console.log('User has not passed quiz - showing only daily work:', filteredJobs.length, 'jobs');
-      console.log('Filtered out technical jobs');
+      filteredJobs = rawJobs.filter(job => job.type === 'Daily Work');
+      console.log('❌ User has not passed quiz - showing only daily work:', filteredJobs.length, 'jobs');
+      console.log('Technical work categories will be hidden');
     }
     
-    // Store original (untranslated) jobs
-    setOriginalJobs(filteredJobs);
     // Translate jobs based on current language
     setJobs(translateJobs(filteredJobs, language));
   };
@@ -1066,11 +1336,16 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.brandSubtitle}>STUDENT EMPLOYMENT PLATFORM</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.notificationButton} onPress={() => setNotifications(0)}>
+          <TouchableOpacity 
+            style={styles.notificationButton} 
+            onPress={() => navigation.navigate('NotificationsScreen')}
+          >
             <Ionicons name="notifications" size={20} color="#374151" />
-            {notifications > 0 && (
+            {unreadNotifications > 0 && (
               <View style={styles.notificationBadge}>
-                <Text style={styles.badgeText}>{notifications}</Text>
+                <Text style={styles.badgeText}>
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -1099,9 +1374,9 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Daily Work Categories */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('availableJobs')}</Text>
+          <Text style={styles.sectionTitle}>{t('dailyWork')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
-            {dailyWorkCategories.map((category, index) => (
+            {dailyWorkCategories && dailyWorkCategories.map((category, index) => (
               <TouchableOpacity
                 key={index}
                 onPress={() => handleCategoryPress(category)}
@@ -1117,27 +1392,55 @@ const HomeScreen = ({ navigation }) => {
           </ScrollView>
         </View>
 
-        {/* Technical Work Categories - Only show if quiz passed */}
-        {testStatus === 'passed' && (
+        {/* Technical Work Categories - Always visible, access based on skill test results */}
+        {technicalCategories && technicalCategories.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('technicalWork')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
-              {technicalWorkCategories.map((category, index) => (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => handleCategoryPress(category)}
-                  style={[styles.categoryCard, { backgroundColor: category.color }]}
-                >
-                  <View style={styles.categoryIconContainer}>
-                    <Ionicons name={category.icon} size={32} color="#FFFFFF" />
-                  </View>
-                  <Text style={styles.categoryName}>{t(category.name.toLowerCase())}</Text>
-                  <View style={styles.testBadge}>
-                    <Ionicons name="checkmark-circle" size={12} color="#FFFFFF" />
-                    <Text style={styles.testBadgeText}>{t('skillTestRequired')}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {technicalCategories && technicalCategories.map((category, index) => {
+                const skillStatus = userSkills[category.name];
+                const isPassed = skillStatus?.passed;
+                const isLocked = skillStatus?.attempted && !skillStatus?.passed;
+                const requiresTest = !skillStatus?.attempted;
+
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => handleCategoryPress(category)}
+                    style={[
+                      styles.categoryCard, 
+                      { backgroundColor: category.color },
+                      (isLocked || requiresTest) && styles.lockedCategoryCard
+                    ]}
+                  >
+                    <View style={styles.categoryIconContainer}>
+                      <Ionicons name={category.icon} size={32} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.categoryName}>{t(category.name.toLowerCase())}</Text>
+                    
+                    {isPassed && (
+                      <View style={styles.passedBadge}>
+                        <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                        <Text style={styles.passedBadgeText}>Unlocked</Text>
+                      </View>
+                    )}
+                    
+                    {isLocked && (
+                      <View style={styles.lockedBadge}>
+                        <Ionicons name="lock-closed" size={14} color="#EF4444" />
+                        <Text style={styles.lockedBadgeText}>Locked</Text>
+                      </View>
+                    )}
+                    
+                    {requiresTest && (
+                      <View style={styles.testRequiredBadge}>
+                        <Ionicons name="shield-checkmark" size={14} color="#F59E0B" />
+                        <Text style={styles.testRequiredBadgeText}>Test Required</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
         )}
@@ -1151,7 +1454,27 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
           
-          {jobs.map((job) => (
+          {/* Loading State */}
+          {loadingJobs && (
+            <View style={styles.emptyState}>
+              <ActivityIndicator size="large" color="#4F46E5" />
+              <Text style={styles.emptyStateText}>Loading jobs...</Text>
+            </View>
+          )}
+
+          {/* Empty State - No Jobs */}
+          {!loadingJobs && (!jobs || jobs.length === 0) && (
+            <View style={styles.emptyState}>
+              <Ionicons name="briefcase-outline" size={64} color="#D1D5DB" />
+              <Text style={styles.emptyStateTitle}>No Jobs Available</Text>
+              <Text style={styles.emptyStateText}>
+                Check back later or employers can post jobs from the Web Dashboard
+              </Text>
+            </View>
+          )}
+
+          {/* Jobs List */}
+          {!loadingJobs && jobs && jobs.map((job) => (
             <TouchableOpacity
               key={job.id}
               onPress={() => handleJobPress(job)}
@@ -1190,7 +1513,7 @@ const HomeScreen = ({ navigation }) => {
                 <View style={[styles.skillLevelTag, { backgroundColor: getSkillLevelColor(job.skillLevel) }]}>
                   <Text style={styles.skillLevelTagText}>{getSkillLevelText(job.skillLevel)}</Text>
                 </View>
-                {job.requiresSkillTest && (
+                {job.requiresSkillTest && testStatus !== 'passed' && (
                   <View style={styles.testRequired}>
                     <Ionicons name="school" size={14} color="#8B5CF6" />
                     <Text style={styles.testRequiredText}>{t('skillTestRequired')}</Text>
@@ -1199,14 +1522,16 @@ const HomeScreen = ({ navigation }) => {
               </View>
 
               {/* Job Benefits Preview */}
-              <View style={styles.benefitsPreview}>
-                {job.benefits.slice(0, 2).map((benefit, index) => (
-                  <View key={index} style={styles.benefitItem}>
-                    <Ionicons name="checkmark-circle" size={12} color="#10B981" />
-                    <Text style={styles.benefitText}>{benefit}</Text>
-                  </View>
-                ))}
-              </View>
+              {job.benefits && job.benefits.length > 0 && (
+                <View style={styles.benefitsPreview}>
+                  {job.benefits.slice(0, 2).map((benefit, index) => (
+                    <View key={index} style={styles.benefitItem}>
+                      <Ionicons name="checkmark-circle" size={12} color="#10B981" />
+                      <Text style={styles.benefitText}>{benefit}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
 
               <View style={styles.jobFooter}>
                 <View style={styles.salaryContainer}>
@@ -1214,25 +1539,19 @@ const HomeScreen = ({ navigation }) => {
                   <Text style={styles.salary}>{job.salary}</Text>
                 </View>
                 <TouchableOpacity
-                  style={[
-                    styles.applyButton,
-                    job.isApplied && styles.appliedButton
-                  ]}
+                  style={styles.applyButton}
                   onPress={(e) => {
                     e.stopPropagation();
-                    if (!job.isApplied) {
-                      handleApplyJob(job);
-                    }
+                    handleViewDetails(job);
                   }}
-                  disabled={job.isApplied}
                 >
                   <Ionicons 
-                    name={job.isApplied ? "checkmark" : "paper-plane"} 
+                    name="eye-outline" 
                     size={16} 
                     color="#FFFFFF" 
                   />
                   <Text style={styles.applyText}>
-                    {job.isApplied ? t('applied') : t('applyNow')}
+                    View Details
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1652,6 +1971,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#FFFFFF',
     opacity: 0.8,
+    textAlign: 'center',
   },
   testBadge: {
     flexDirection: 'row',
@@ -1878,6 +2198,80 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     lineHeight: 20,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+    marginHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#F3F4F6',
+    borderStyle: 'dashed',
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  lockedCategoryCard: {
+    opacity: 0.6,
+  },
+  passedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  passedBadgeText: {
+    fontSize: 11,
+    color: '#10B981',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  lockedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  lockedBadgeText: {
+    fontSize: 11,
+    color: '#EF4444',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  testRequiredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  testRequiredBadgeText: {
+    fontSize: 11,
+    color: '#F59E0B',
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });
 

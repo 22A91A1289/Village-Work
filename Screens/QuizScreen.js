@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Alert,
-  StatusBar,
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  SafeAreaView, 
+  StatusBar, 
+  StyleSheet, 
   ActivityIndicator,
+  Alert,
+  ScrollView 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { generateQuizQuestions, getFallbackQuestions } from '../utils/aiQuizGenerator';
 import { useLanguage } from '../contexts/LanguageContext';
+import { api } from '../utils/api';
+import { generateQuizQuestions, getFallbackQuestions } from '../utils/aiQuizGenerator';
 
 const QuizScreen = ({ route, navigation }) => {
   const { category } = route.params || {};
@@ -25,37 +26,121 @@ const QuizScreen = ({ route, navigation }) => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutes in seconds
   const [questions, setQuestions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false to show language selector first
+  const [showLanguageSelector, setShowLanguageSelector] = useState(true);
+  const [selectedQuizLanguage, setSelectedQuizLanguage] = useState(null);
+  const [eligibilityCheck, setEligibilityCheck] = useState({
+    canAttempt: true,
+    isChecking: true,
+    message: '',
+    daysRemaining: 0,
+    isFirstAttempt: false,
+  });
 
-  // Load questions on component mount
+  // Check quiz eligibility on component mount
   useEffect(() => {
-    loadQuestions();
+    checkQuizEligibility();
   }, []);
+
+  // Load questions only if eligible and language selected
+  useEffect(() => {
+    if (eligibilityCheck.canAttempt && !eligibilityCheck.isChecking && selectedQuizLanguage) {
+      loadQuestions();
+    }
+  }, [eligibilityCheck.canAttempt, eligibilityCheck.isChecking, selectedQuizLanguage]);
+
+  const checkQuizEligibility = async () => {
+    try {
+      console.log('🔍 Checking quiz eligibility for category:', category?.name || 'general');
+      setEligibilityCheck(prev => ({ ...prev, isChecking: true }));
+      
+      // Build URL with category query parameter if category exists
+      const url = category?.name 
+        ? `/api/quiz/can-attempt?category=${encodeURIComponent(category.name)}`
+        : '/api/quiz/can-attempt';
+      
+      const response = await api.get(url, { auth: true });
+      console.log('✅ Eligibility check response:', response);
+      
+      setEligibilityCheck({
+        canAttempt: response.canAttempt,
+        isChecking: false,
+        message: response.message,
+        daysRemaining: response.daysRemaining || 0,
+        isFirstAttempt: response.isFirstAttempt || false,
+        lastAttemptDate: response.lastAttemptDate,
+        nextAvailableDate: response.nextAvailableDate,
+      });
+      
+      if (!response.canAttempt) {
+        console.log(`❌ Quiz restricted: ${response.message}`);
+      } else {
+        console.log(`✅ Quiz allowed: ${response.isFirstAttempt ? 'First attempt' : 'Retake allowed'}`);
+      }
+    } catch (error) {
+      console.error('❌ Error checking quiz eligibility:', error);
+      // Allow quiz on error (fail open)
+      setEligibilityCheck({
+        canAttempt: true,
+        isChecking: false,
+        message: 'Unable to check eligibility, proceeding...',
+        daysRemaining: 0,
+        isFirstAttempt: false,
+      });
+    }
+  };
 
   const loadQuestions = async () => {
     try {
       setLoading(true);
       const categoryName = category?.name || 'Electrician';
+      const quizLang = selectedQuizLanguage || language;
       
-      // Try to generate questions using Gemini API in user's selected language
-      const aiQuestions = await generateQuizQuestions(categoryName, 5, language);
+      // Get previously used questions for this category to avoid repetition
+      const usedQuestionsKey = `usedQuestions_${categoryName}`;
+      const storedUsedQuestions = await AsyncStorage.getItem(usedQuestionsKey);
+      const usedQuestions = storedUsedQuestions ? JSON.parse(storedUsedQuestions) : [];
       
-      if (aiQuestions && aiQuestions.length > 0) {
-        // Use AI-generated questions
-        setQuestions(aiQuestions);
-        console.log('Using AI-generated questions');
+      console.log(`📚 Loading questions for ${categoryName} in ${quizLang} language`);
+      console.log(`🔄 Previously used questions: ${usedQuestions.length}`);
+      
+      let finalQuestions = [];
+      
+      // TRY AI GENERATION FIRST (for unlimited, dynamic questions in any language)
+      console.log('🤖 Attempting AI question generation...');
+      const aiQuestions = await generateQuizQuestions(categoryName, 5, quizLang);
+      
+      if (aiQuestions && aiQuestions.length >= 5) {
+        // AI generation successful! Use fresh AI-generated questions
+        console.log('✅ Using AI-generated questions (fresh & dynamic)');
+        finalQuestions = aiQuestions;
       } else {
-        // Fallback to hardcoded questions in user's language
-        const fallbackQuestions = getFallbackQuestions(categoryName, language);
-        setQuestions(fallbackQuestions);
-        console.log('Using fallback questions');
+        // AI failed or not configured - use fallback questions
+        console.log('⚡ AI not available, using fallback questions');
+        
+        const fallbackQuestions = getFallbackQuestions(categoryName, quizLang);
+        const unusedFallback = fallbackQuestions.filter(q => 
+          !usedQuestions.some(usedQ => usedQ.toLowerCase() === q.question.toLowerCase())
+        );
+        
+        finalQuestions = unusedFallback.sort(() => 0.5 - Math.random()).slice(0, 5);
+        
+        // If all questions used, reset and use all
+        if (finalQuestions.length < 5) {
+          console.log('⚠️ All fallback questions used, resetting...');
+          await AsyncStorage.removeItem(usedQuestionsKey);
+          finalQuestions = fallbackQuestions.sort(() => 0.5 - Math.random()).slice(0, 5);
+        }
       }
+      
+      setQuestions(finalQuestions);
+      console.log(`✅ Loaded ${finalQuestions.length} questions`);
     } catch (error) {
       console.error('Error loading questions:', error);
       // Fallback to hardcoded questions on error
       const categoryName = category?.name || 'Electrician';
-      const fallbackQuestions = getFallbackQuestions(categoryName, language);
-      setQuestions(fallbackQuestions);
+      const fallbackQuestions = getFallbackQuestions(categoryName, selectedQuizLanguage || language);
+      setQuestions(fallbackQuestions.slice(0, 5));
     } finally {
       setLoading(false);
     }
@@ -244,6 +329,14 @@ const QuizScreen = ({ route, navigation }) => {
   const handleSubmitQuiz = async () => {
     let correctAnswers = 0;
     
+    // Prepare questions with user answers for backend
+    const questionsWithAnswers = questions.map((q, index) => ({
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      userAnswer: answers[index] !== undefined ? answers[index] : null
+    }));
+    
     questions.forEach((q, index) => {
       if (answers[index] === q.correctAnswer) {
         correctAnswers++;
@@ -252,11 +345,53 @@ const QuizScreen = ({ route, navigation }) => {
 
     const percentage = (correctAnswers / totalQuestions) * 100;
     const passed = percentage >= 60; // 60% to pass
+    const timeTaken = 600 - timeRemaining; // Calculate time taken in seconds
 
     setScore(correctAnswers);
     setQuizCompleted(true);
 
     try {
+      // Submit quiz to backend
+      const quizData = {
+        category: category?.name || 'General',
+        questions: questionsWithAnswers,
+        timeTaken: timeTaken
+      };
+
+      let backendResult = null;
+      let updatedUser = null;
+      
+      // Check if user is logged in
+      const authToken = await AsyncStorage.getItem('authToken');
+      
+      if (authToken) {
+        try {
+          backendResult = await api.post('/api/quiz/submit', quizData, { auth: true });
+          console.log('✅ Quiz submitted to backend:', backendResult);
+          
+          // Fetch updated user profile from backend to get latest quiz status
+          try {
+            updatedUser = await api.get('/api/auth/me', { auth: true });
+            console.log('✅ Updated user profile:', updatedUser);
+            
+            // Update AsyncStorage with backend data (source of truth)
+            if (updatedUser) {
+              await AsyncStorage.setItem('userSkillLevel', updatedUser.skillLevel || (passed ? 'experienced' : 'new'));
+              await AsyncStorage.setItem('skillAssessmentCompleted', updatedUser.quizPassed ? 'passed' : 'failed');
+              await AsyncStorage.setItem('quizPassed', updatedUser.quizPassed ? 'true' : 'false');
+            }
+          } catch (userError) {
+            console.log('Could not fetch updated profile, using local data');
+          }
+        } catch (apiError) {
+          console.log('Could not sync with backend, saving locally:', apiError.message);
+          // Continue with local storage even if backend fails
+        }
+      } else {
+        console.log('📝 Not logged in - saving quiz results locally only');
+      }
+
+      // Also save locally for offline access
       const quizResult = {
         category: category?.name || 'General',
         score: correctAnswers,
@@ -267,20 +402,39 @@ const QuizScreen = ({ route, navigation }) => {
         answers: answers
       };
 
-      await AsyncStorage.setItem('userSkillLevel', 'experienced');
+      await AsyncStorage.setItem('userSkillLevel', passed ? 'experienced' : 'new');
       await AsyncStorage.setItem('quizResult', JSON.stringify(quizResult));
       await AsyncStorage.setItem('skillAssessmentCompleted', passed ? 'passed' : 'failed');
       await AsyncStorage.setItem('quizDate', new Date().toISOString());
+      
+      // Save used questions to avoid repetition on retake
+      const categoryName = category?.name || 'General';
+      const usedQuestionsKey = `usedQuestions_${categoryName}`;
+      const storedUsedQuestions = await AsyncStorage.getItem(usedQuestionsKey);
+      const existingUsedQuestions = storedUsedQuestions ? JSON.parse(storedUsedQuestions) : [];
+      
+      // Add current questions to used list
+      const newUsedQuestions = questions.map(q => q.question);
+      const updatedUsedQuestions = [...new Set([...existingUsedQuestions, ...newUsedQuestions])];
+      
+      await AsyncStorage.setItem(usedQuestionsKey, JSON.stringify(updatedUsedQuestions));
+      console.log(`💾 Saved ${newUsedQuestions.length} used questions for ${categoryName}. Total used: ${updatedUsedQuestions.length}`);
       await AsyncStorage.setItem('selectedCategory', category?.name || 'General');
 
       if (passed) {
         Alert.alert(
           'Congratulations! 🎉',
-          `You passed the skill assessment!\n\nScore: ${correctAnswers}/${totalQuestions} (${percentage.toFixed(1)}%)\n\nYou now have access to technical and daily work opportunities.`,
+          `You passed the skill assessment!\n\nScore: ${correctAnswers}/${totalQuestions} (${percentage.toFixed(1)}%)\n\nYou now have access to technical and daily work opportunities.\n\nTechnical work categories will now be visible on the home screen!`,
           [
             {
               text: 'Continue',
-              onPress: () => navigation.replace('WorkerTabNavigator')
+              onPress: () => {
+                // Navigate to home screen which will refresh and show technical skills
+                navigation.replace('WorkerTabNavigator', {
+                  screen: 'Home',
+                  params: { refresh: true, quizPassed: true }
+                });
+              }
             }
           ]
         );
@@ -308,38 +462,78 @@ const QuizScreen = ({ route, navigation }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Show loading state while questions are being loaded
-  if (loading) {
+  // Show eligibility checking state
+  if (eligibilityCheck.isChecking) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4F46E5" />
-          <Text style={styles.loadingText}>Generating quiz questions...</Text>
+          <Text style={styles.loadingText}>Checking eligibility...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  // Show error if no questions available
-  if (!currentQuestion || questions.length === 0) {
+  // Show restriction message if user cannot attempt quiz
+  if (!eligibilityCheck.canAttempt) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-        <View style={styles.loadingContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-          <Text style={styles.loadingText}>Unable to load questions</Text>
+        <View style={styles.restrictionContainer}>
+          <Ionicons name="time-outline" size={80} color="#F59E0B" />
+          <Text style={styles.restrictionTitle}>Quiz Temporarily Unavailable</Text>
+          <Text style={styles.restrictionMessage}>{eligibilityCheck.message}</Text>
+          
+          <View style={styles.restrictionInfoCard}>
+            <View style={styles.restrictionInfoRow}>
+              <Ionicons name="calendar-outline" size={24} color="#6B7280" />
+              <View style={styles.restrictionInfoText}>
+                <Text style={styles.restrictionInfoLabel}>Days Remaining</Text>
+                <Text style={styles.restrictionInfoValue}>
+                  {eligibilityCheck.daysRemaining} {eligibilityCheck.daysRemaining === 1 ? 'day' : 'days'}
+                </Text>
+              </View>
+            </View>
+            
+            {eligibilityCheck.nextAvailableDate && (
+              <View style={styles.restrictionInfoRow}>
+                <Ionicons name="checkmark-circle-outline" size={24} color="#6B7280" />
+                <View style={styles.restrictionInfoText}>
+                  <Text style={styles.restrictionInfoLabel}>Available From</Text>
+                  <Text style={styles.restrictionInfoValue}>
+                    {new Date(eligibilityCheck.nextAvailableDate).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.restrictionNote}>
+            <Ionicons name="information-circle-outline" size={20} color="#6B7280" />
+            <Text style={styles.restrictionNoteText}>
+              You must wait 5 days between quiz attempts to ensure proper skill development.
+            </Text>
+          </View>
+
           <TouchableOpacity 
-            style={styles.retryButton}
-            onPress={loadQuestions}
+            style={styles.restrictionBackButton}
+            onPress={() => navigation.goBack()}
           >
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+            <Text style={styles.restrictionBackButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
+  // Show quiz completed screen first
   if (quizCompleted) {
     return (
       <SafeAreaView style={styles.container}>
@@ -361,6 +555,117 @@ const QuizScreen = ({ route, navigation }) => {
               ? 'You now have access to technical and daily work opportunities!'
               : 'You can retake the test after 1 week. For now, you\'ll see daily work opportunities.'}
           </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Language selector screen - MUST COME BEFORE LOADING
+  if (showLanguageSelector) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#374151" />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>Select Quiz Language</Text>
+            <Text style={styles.headerSubtitle}>{category?.name || 'General'} Skill Test</Text>
+          </View>
+          <View style={{ width: 40 }} />
+        </View>
+
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.languageSelectorContainer}>
+            <Ionicons name="language" size={64} color="#4F46E5" style={styles.languageIcon} />
+            <Text style={styles.languageTitle}>Choose Your Test Language</Text>
+            <Text style={styles.languageSubtitle}>
+              Questions and answers will be shown in the selected language
+            </Text>
+
+            {/* Language Options */}
+            <View style={styles.languageOptionsContainer}>
+              <TouchableOpacity 
+                style={styles.languageOption}
+                onPress={() => {
+                  setSelectedQuizLanguage('en');
+                  setShowLanguageSelector(false);
+                }}
+              >
+                <View style={styles.languageIconContainer}>
+                  <Text style={styles.languageEmoji}>🇬🇧</Text>
+                </View>
+                <Text style={styles.languageOptionTitle}>English</Text>
+                <Text style={styles.languageOptionSubtitle}>Questions in English</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.languageOption}
+                onPress={() => {
+                  setSelectedQuizLanguage('te');
+                  setShowLanguageSelector(false);
+                }}
+              >
+                <View style={styles.languageIconContainer}>
+                  <Text style={styles.languageEmoji}>🇮🇳</Text>
+                </View>
+                <Text style={styles.languageOptionTitle}>తెలుగు (Telugu)</Text>
+                <Text style={styles.languageOptionSubtitle}>Questions in Telugu</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.languageOption}
+                onPress={() => {
+                  setSelectedQuizLanguage('hi');
+                  setShowLanguageSelector(false);
+                }}
+              >
+                <View style={styles.languageIconContainer}>
+                  <Text style={styles.languageEmoji}>🇮🇳</Text>
+                </View>
+                <Text style={styles.languageOptionTitle}>हिंदी (Hindi)</Text>
+                <Text style={styles.languageOptionSubtitle}>Questions in Hindi</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // Show loading state while questions are being loaded (AFTER language selection)
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4F46E5" />
+          <Text style={styles.loadingText}>🤖 Generating quiz questions...</Text>
+          <Text style={styles.loadingSubText}>
+            Creating fresh questions in {selectedQuizLanguage === 'te' ? 'తెలుగు' : selectedQuizLanguage === 'hi' ? 'हिंदी' : 'English'}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error if no questions available
+  if (!currentQuestion || questions.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.loadingContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+          <Text style={styles.loadingText}>Unable to load questions</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={loadQuestions}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -664,6 +969,12 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
   },
+  loadingSubText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
   retryButton: {
     marginTop: 20,
     backgroundColor: '#4F46E5',
@@ -675,6 +986,144 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  restrictionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+    backgroundColor: '#F9FAFB',
+  },
+  restrictionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginTop: 24,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  restrictionMessage: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  restrictionInfoCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  restrictionInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  restrictionInfoText: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  restrictionInfoLabel: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  restrictionInfoValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  restrictionNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FEF3C7',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  restrictionNoteText: {
+    fontSize: 14,
+    color: '#92400E',
+    marginLeft: 12,
+    flex: 1,
+    lineHeight: 20,
+  },
+  restrictionBackButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4F46E5',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 10,
+  },
+  restrictionBackButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  languageSelectorContainer: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  languageIcon: {
+    marginBottom: 24,
+    marginTop: 40,
+  },
+  languageTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  languageSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 40,
+    paddingHorizontal: 20,
+    lineHeight: 24,
+  },
+  languageOptionsContainer: {
+    width: '100%',
+    gap: 16,
+  },
+  languageOption: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  languageIconContainer: {
+    marginBottom: 12,
+  },
+  languageEmoji: {
+    fontSize: 48,
+  },
+  languageOptionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 6,
+  },
+  languageOptionSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
   },
 });
 

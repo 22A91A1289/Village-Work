@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { api, setAuth } from '../utils/api';
 
 const SignUpScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -22,12 +23,33 @@ const SignUpScreen = ({ navigation }) => {
     phone: '',
     password: '',
     confirmPassword: '',
-    userType: 'worker', // worker, owner, helper
     location: '',
   });
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const workCategories = [
+    { value: 'electrician', label: 'Electrician', icon: 'flash' },
+    { value: 'plumber', label: 'Plumber', icon: 'water' },
+    { value: 'carpenter', label: 'Carpenter', icon: 'construct' },
+    { value: 'painter', label: 'Painter', icon: 'color-palette' },
+    { value: 'mechanic', label: 'Mechanic', icon: 'settings' },
+    { value: 'dataEntry', label: 'Data Entry', icon: 'laptop' },
+  ];
+
+  const toggleCategory = (categoryValue) => {
+    if (selectedCategories.includes(categoryValue)) {
+      setSelectedCategories(selectedCategories.filter(c => c !== categoryValue));
+    } else {
+      if (selectedCategories.length >= 5) {
+        Alert.alert('Limit Reached', 'You can select up to 5 work categories');
+        return;
+      }
+      setSelectedCategories([...selectedCategories, categoryValue]);
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -45,6 +67,11 @@ const SignUpScreen = ({ navigation }) => {
       return;
     }
 
+    if (selectedCategories.length === 0) {
+      Alert.alert('Error', 'Please select at least one work category');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
@@ -56,35 +83,44 @@ const SignUpScreen = ({ navigation }) => {
     }
 
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(async () => {
-      setIsLoading(false);
-      
-      // Save the selected role
-      try {
-        await AsyncStorage.setItem('userRole', formData.userType);
-      } catch (error) {
-        console.error('Error saving role:', error);
-      }
-      
-      Alert.alert(
-        'Success', 
-        'Account created successfully! Please sign in.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('LoginScreen')
-          }
-        ]
-      );
-    }, 1500);
-  };
 
-  const userTypes = [
-    { key: 'worker', label: 'Worker', icon: 'construct', description: 'Find jobs and work opportunities' },
-    { key: 'owner', label: 'Recruiter', icon: 'business', description: 'Post jobs and hire workers' },
-  ];
+    try {
+      // Default experience level for all new workers
+      const defaultExperience = 'new';
+
+      // Mobile app is worker-only - always create worker accounts
+      const result = await api.post('/api/auth/register', {
+        name: formData.fullName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
+        password: formData.password,
+        role: 'worker',
+        location: formData.location.trim(),
+        workCategories: selectedCategories,
+        experienceLevel: defaultExperience,
+        workPreferencesCompleted: true,
+      });
+
+      // Save auth token and user data
+      await setAuth(result.token, { ...result.user, role: 'worker' });
+      await AsyncStorage.setItem('userRole', 'worker');
+      
+      // Set default skill level
+      await AsyncStorage.setItem('userSkillLevel', defaultExperience);
+      await AsyncStorage.setItem('skillAssessmentCompleted', 'pending');
+      await AsyncStorage.setItem('workPreferencesCompleted', 'true');
+
+      // Navigate directly to home
+      navigation.reset({ 
+        index: 0, 
+        routes: [{ name: 'WorkerTabNavigator' }] 
+      });
+    } catch (error) {
+      Alert.alert('Sign Up Failed', error?.message || 'Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -116,41 +152,6 @@ const SignUpScreen = ({ navigation }) => {
             <Text style={styles.subtitleText}>Create your account to get started</Text>
 
             {/* User Type Selection */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>I want to be a:</Text>
-              <Text style={styles.inputSubtext}>Choose how you want to use WORKNEX</Text>
-              <View style={styles.userTypeContainer}>
-                {userTypes.map((type) => (
-                  <TouchableOpacity
-                    key={type.key}
-                    style={[
-                      styles.userTypeButton,
-                      formData.userType === type.key && styles.userTypeButtonActive
-                    ]}
-                    onPress={() => handleInputChange('userType', type.key)}
-                  >
-                    <Ionicons 
-                      name={type.icon} 
-                      size={24} 
-                      color={formData.userType === type.key ? '#FFFFFF' : '#6B7280'} 
-                    />
-                    <Text style={[
-                      styles.userTypeLabel,
-                      formData.userType === type.key && styles.userTypeLabelActive
-                    ]}>
-                      {type.label}
-                    </Text>
-                    <Text style={[
-                      styles.userTypeDescription,
-                      formData.userType === type.key && styles.userTypeDescriptionActive
-                    ]}>
-                      {type.description}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Full Name</Text>
               <View style={styles.inputContainer}>
@@ -206,6 +207,44 @@ const SignUpScreen = ({ navigation }) => {
                   onChangeText={(value) => handleInputChange('location', value)}
                   autoCapitalize="words"
                 />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Work Categories (Select up to 5)</Text>
+              <Text style={styles.inputSubtext}>
+                {selectedCategories.length > 0 
+                  ? `${selectedCategories.length} selected` 
+                  : 'Choose your work categories'}
+              </Text>
+              <View style={styles.categoriesGrid}>
+                {workCategories.map((category) => (
+                  <TouchableOpacity
+                    key={category.value}
+                    style={[
+                      styles.categoryChip,
+                      selectedCategories.includes(category.value) && styles.categoryChipSelected
+                    ]}
+                    onPress={() => toggleCategory(category.value)}
+                  >
+                    <Ionicons 
+                      name={category.icon} 
+                      size={20} 
+                      color={selectedCategories.includes(category.value) ? '#4F46E5' : '#6B7280'} 
+                    />
+                    <Text style={[
+                      styles.categoryChipText,
+                      selectedCategories.includes(category.value) && styles.categoryChipTextSelected
+                    ]}>
+                      {category.label}
+                    </Text>
+                    {selectedCategories.includes(category.value) && (
+                      <View style={styles.categoryCheckBadge}>
+                        <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
 
@@ -442,6 +481,102 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#4F46E5',
     fontWeight: '600',
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 12,
+    gap: 10,
+  },
+  pickerWrapper: {
+    flex: 1,
+    gap: 8,
+  },
+  pickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  pickerOptionSelected: {
+    borderColor: '#4F46E5',
+    backgroundColor: '#EEF2FF',
+  },
+  pickerOptionText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  pickerOptionTextSelected: {
+    color: '#4F46E5',
+    fontWeight: '600',
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 8,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+    gap: 6,
+    position: 'relative',
+  },
+  categoryChipSelected: {
+    borderColor: '#4F46E5',
+    backgroundColor: '#EEF2FF',
+  },
+  categoryChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  categoryChipTextSelected: {
+    color: '#4F46E5',
+  },
+  categoryCheckBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#4F46E5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
 });
 

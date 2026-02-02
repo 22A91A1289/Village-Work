@@ -15,6 +15,7 @@ import { Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { api } from '../utils/api';
 
 const VideoUploadScreen = ({ route, navigation }) => {
   const { fromOnboarding } = route?.params || {};
@@ -47,9 +48,9 @@ const VideoUploadScreen = ({ route, navigation }) => {
     if (isRecording) {
       recordingTimerRef.current = setInterval(() => {
         setRecordingDuration((prev) => {
-          if (prev >= 60) {
+          if (prev >= 240) { // Stop at 4 minutes
             handleStopRecording();
-            return 60;
+            return 240;
           }
           return prev + 1;
         });
@@ -96,7 +97,7 @@ const VideoUploadScreen = ({ route, navigation }) => {
       
       // Start recording - this returns a promise that resolves when recording stops
       recordingPromiseRef.current = cameraRef.current.recordAsync({
-        maxDuration: 60,
+        maxDuration: 240, // 4 minutes max
         mute: false, // Enable microphone recording
         quality: 'high',
       });
@@ -156,14 +157,16 @@ const VideoUploadScreen = ({ route, navigation }) => {
         mediaTypes: ImagePicker.MediaTypeOptions.Videos,
         allowsEditing: true,
         quality: 0.8,
-        videoMaxDuration: 60,
+        videoMaxDuration: 240, // Allow up to 4 minutes
       });
 
       if (!result.canceled && result.assets[0]) {
         setVideoUri(result.assets[0].uri);
-        // Get video duration (approximate)
+        // Get video duration (convert from milliseconds to seconds)
         if (result.assets[0].duration) {
-          setVideoDuration(Math.round(result.assets[0].duration));
+          const durationInSeconds = Math.round(result.assets[0].duration / 1000);
+          console.log('📹 Video duration:', result.assets[0].duration, 'ms =', durationInSeconds, 'seconds');
+          setVideoDuration(durationInSeconds);
         }
       }
     } catch (error) {
@@ -222,11 +225,19 @@ const VideoUploadScreen = ({ route, navigation }) => {
       return;
     }
 
-    // Check video duration (should be 30-60 seconds)
+    // Check video duration (must be 30 seconds to 4 minutes = 30-240 seconds)
     if (videoDuration > 0 && videoDuration < 30) {
       Alert.alert(
         'Video Too Short',
-        'Your introduction video should be at least 30 seconds long. Please select a longer video.'
+        'Your introduction video must be at least 30 seconds long. Please record or select a longer video.'
+      );
+      return;
+    }
+
+    if (videoDuration > 240) {
+      Alert.alert(
+        'Video Too Long',
+        'Your introduction video must not exceed 4 minutes (240 seconds). Please record or select a shorter video.'
       );
       return;
     }
@@ -234,13 +245,25 @@ const VideoUploadScreen = ({ route, navigation }) => {
     setIsUploading(true);
 
     try {
-      // For demo: Store video URI in AsyncStorage
-      // In production, upload to cloud storage (Firebase/AWS)
+      // Store video URI locally in AsyncStorage
       await AsyncStorage.setItem('userVideoUri', videoUri);
       await AsyncStorage.setItem('videoUploadDate', new Date().toISOString());
       await AsyncStorage.setItem('hasVideoIntroduction', 'true');
       if (videoDuration > 0) {
         await AsyncStorage.setItem('videoDuration', videoDuration.toString());
+      }
+
+      // Upload to backend to mark video as uploaded
+      try {
+        await api.post('/api/users/upload-video', {
+          videoUrl: videoUri, // In production, this would be cloud storage URL
+          duration: videoDuration
+        }, { auth: true });
+        
+        console.log('✅ Video uploaded to backend successfully');
+      } catch (backendError) {
+        console.warn('⚠️ Failed to upload to backend, but saved locally:', backendError);
+        // Continue anyway - video is saved locally
       }
 
       setIsUploading(false);
@@ -366,7 +389,7 @@ const VideoUploadScreen = ({ route, navigation }) => {
 
             <Text style={styles.title}>Record Your Introduction</Text>
             <Text style={styles.subtitle}>
-              Upload a 30-60 second video introducing yourself to potential employers
+              Upload a 30 seconds to 4 minutes video introducing yourself to potential employers
             </Text>
 
             <View style={styles.instructionsContainer}>
@@ -391,7 +414,7 @@ const VideoUploadScreen = ({ route, navigation }) => {
               <View style={styles.instructionItem}>
                 <Ionicons name="checkmark-circle" size={24} color="#10B981" />
                 <Text style={styles.instructionText}>
-                  Keep it between 30-60 seconds
+                  Keep it between 30 seconds to 4 minutes
                 </Text>
               </View>
             </View>
@@ -443,6 +466,14 @@ const VideoUploadScreen = ({ route, navigation }) => {
                   <Ionicons name="warning-outline" size={20} color="#F59E0B" />
                   <Text style={styles.warningText}>
                     Video should be at least 30 seconds
+                  </Text>
+                </View>
+              )}
+              {videoDuration > 240 && (
+                <View style={styles.warningContainer}>
+                  <Ionicons name="warning-outline" size={20} color="#EF4444" />
+                  <Text style={[styles.warningText, { color: '#991B1B' }]}>
+                    Video exceeds 4 minutes maximum
                   </Text>
                 </View>
               )}

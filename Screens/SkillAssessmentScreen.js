@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { api } from '../utils/api';
 
 const SkillAssessmentScreen = ({ navigation }) => {
   const [showTestRegistration, setShowTestRegistration] = useState(false);
@@ -23,7 +24,9 @@ const SkillAssessmentScreen = ({ navigation }) => {
     { name: 'Electrician', icon: 'flash', color: '#EF4444' },
     { name: 'Plumber', icon: 'water', color: '#3B82F6' },
     { name: 'Carpenter', icon: 'construct', color: '#8B5CF6' },
+    { name: 'Painter', icon: 'color-palette', color: '#F59E0B' },
     { name: 'Mechanic', icon: 'car-sport', color: '#06B6D4' },
+    { name: 'Data Entry', icon: 'laptop', color: '#10B981' },
   ];
 
   const nearbyTesters = [
@@ -57,6 +60,36 @@ const SkillAssessmentScreen = ({ navigation }) => {
       availableSlots: ['Today 6 PM', 'Tomorrow 9 AM', 'Tomorrow 2 PM'],
       phone: '9998887777',
     },
+    {
+      id: 4,
+      name: 'Vijay Kumar',
+      category: 'Painter',
+      experience: '10 years',
+      rating: 4.7,
+      distance: '2.2 km',
+      availableSlots: ['Today 3 PM', 'Tomorrow 1 PM'],
+      phone: '9876512345',
+    },
+    {
+      id: 5,
+      name: 'Krishna Rao',
+      category: 'Mechanic',
+      experience: '14 years',
+      rating: 4.8,
+      distance: '3.5 km',
+      availableSlots: ['Today 5 PM', 'Tomorrow 12 PM'],
+      phone: '9876523456',
+    },
+    {
+      id: 6,
+      name: 'Sai Prasad',
+      category: 'Data Entry',
+      experience: '8 years',
+      rating: 4.5,
+      distance: '1.5 km',
+      availableSlots: ['Today 4 PM', 'Tomorrow 10 AM', 'Tomorrow 4 PM'],
+      phone: '9876534567',
+    },
   ];
 
   useEffect(() => {
@@ -78,33 +111,43 @@ const SkillAssessmentScreen = ({ navigation }) => {
   const handleCategorySelection = async (category) => {
     setSelectedCategory(category);
     
-    // Check if user can retake quiz (1 week cooldown)
+    // Check eligibility using backend API (5-day restriction after first attempt)
     try {
-      const lastQuizDate = await AsyncStorage.getItem('quizDate');
-      if (lastQuizDate) {
-        const lastDate = new Date(lastQuizDate);
-        const now = new Date();
-        const daysSince = (now - lastDate) / (1000 * 60 * 60 * 24);
-        
-        if (daysSince < 7) {
-          const daysRemaining = Math.ceil(7 - daysSince);
-          Alert.alert(
-            'Retake Available Soon',
-            `You can retake the quiz in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''}.\n\nFor now, you'll see daily work opportunities.`,
-            [
-              { text: 'OK', onPress: () => navigation.replace('WorkerTabNavigator') }
-            ]
-          );
-          return;
-        }
+      console.log('🔍 Checking quiz eligibility for category:', category?.name || 'general');
+      
+      // Build URL with category query parameter
+      const url = category?.name 
+        ? `/api/quiz/can-attempt?category=${encodeURIComponent(category.name)}`
+        : '/api/quiz/can-attempt';
+      
+      const response = await api.get(url, { auth: true });
+      console.log('✅ Eligibility response:', response);
+      
+      if (!response.canAttempt) {
+        // User cannot attempt quiz yet (5-day restriction)
+        Alert.alert(
+          'Quiz Available Soon',
+          `${response.message}\n\nYou must wait ${response.daysRemaining} ${response.daysRemaining === 1 ? 'day' : 'days'} between quiz attempts to ensure proper skill development.`,
+          [
+            { 
+              text: 'OK', 
+              onPress: () => {
+                setShowTestRegistration(false);
+                navigation.goBack();
+              }
+            }
+          ]
+        );
+        return;
       }
       
-      // Navigate to quiz screen
+      // User can attempt quiz (either first time or 5+ days since last attempt)
+      console.log(`✅ Proceeding to quiz: ${response.isFirstAttempt ? 'First attempt' : 'Retake allowed'}`);
       navigation.navigate('QuizScreen', { category });
       setShowTestRegistration(false);
     } catch (error) {
-      console.error('Error checking quiz date:', error);
-      // Navigate to quiz anyway
+      console.error('❌ Error checking quiz eligibility:', error);
+      // On error, allow quiz (fail open)
       navigation.navigate('QuizScreen', { category });
       setShowTestRegistration(false);
     }
