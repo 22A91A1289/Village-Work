@@ -30,8 +30,16 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# local env files - never commit secrets
+.env
+.env.*
 .env*.local
+backend/.env
+web-dashboard/.env
 
 # typescript
 *.tsbuildinfo
+
+# Cursor IDE – do not track Cursor project data or MCP descriptors
+.cursor/
+mcps/
