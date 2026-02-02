@@ -1,0 +1,6 @@
+Vercel Root Directory (type in Vercel Project Settings → General):
+
+  web-dashboard
+
+Set this in Vercel dashboard so the web dashboard deploys correctly.
+See VERCEL_ROOT_DIRECTORY_SETUP.md for full steps.

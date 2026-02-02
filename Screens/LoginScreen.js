@@ -61,7 +61,16 @@ const LoginScreen = ({ navigation }) => {
       // Navigate to worker app - session persists until logout
       navigation.reset({ index: 0, routes: [{ name: 'WorkerTabNavigator' }] });
     } catch (err) {
-      Alert.alert('Login Failed', err?.message || 'Please try again.');
+      const message =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Please try again.';
+      const hint =
+        message.toLowerCase().includes('network') || message.toLowerCase().includes('fetch')
+          ? ' Check that the backend is running and reachable (same Wi‑Fi, correct API URL).'
+          : '';
+      Alert.alert('Login Failed', message + hint);
     } finally {
       setIsLoading(false);
     }
@@ -160,12 +169,12 @@ const LoginScreen = ({ navigation }) => {
               {isLoading ? (
                 <View style={styles.loadingContainer}>
                   <Ionicons name="reload" size={20} color="#FFFFFF" style={styles.spinning} />
-                  <Text style={styles.loginButtonText}>Signing In...</Text>
+                  <Text style={styles.loginButtonText}>Logging in...</Text>
                 </View>
               ) : (
                 <>
                   <Ionicons name="log-in" size={20} color="#FFFFFF" />
-                  <Text style={styles.loginButtonText}>Sign In</Text>
+                  <Text style={styles.loginButtonText}>Login</Text>
                 </>
               )}
             </TouchableOpacity>

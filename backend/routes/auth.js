@@ -28,16 +28,18 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Please provide all required fields' });
     }
     
+    const emailNorm = (typeof email === 'string' ? email : '').trim().toLowerCase();
+    
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: emailNorm });
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists with this email' });
     }
     
-    // Create new user
+    // Create new user (use normalized email)
     const user = new User({
       name,
-      email,
+      email: emailNorm,
       phone,
       password,
       role,
@@ -122,8 +124,11 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Please provide email and password' });
     }
     
+    // Normalize email (backend stores lowercase)
+    const emailNorm = (typeof email === 'string' ? email : '').trim().toLowerCase();
+    
     // Find user
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: emailNorm });
     if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
