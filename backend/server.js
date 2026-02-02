@@ -12,10 +12,15 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-// Initialize Socket.io with CORS
+// Initialize Socket.io with CORS (same origins as Express + Vercel)
 const io = socketIo(server, {
   cors: {
-    origin: ['http://localhost:3000', 'http://192.168.31.14:3000'],
+    origin: (origin, callback) => {
+      const allowed = ['http://localhost:3000', 'http://192.168.31.14:3000'];
+      const vercel = origin && /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin);
+      if (!origin || allowed.includes(origin) || vercel) callback(null, true);
+      else callback(null, false);
+    },
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -27,9 +32,23 @@ app.set('io', io);
 // Connect to MongoDB
 connectDB();
 
-// Middleware
+// Middleware - allow localhost, local IP, Expo web, and Vercel dashboard
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://192.168.31.14:3000',
+  'http://localhost:19006'
+];
+const isVercel = (origin) => origin && /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin);
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://192.168.31.14:3000', 'http://localhost:19006'],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || isVercel(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

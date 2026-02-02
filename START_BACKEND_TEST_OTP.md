@@ -2,7 +2,7 @@
 
 ## ✅ Email System is WORKING!
 
-Test email successfully sent to `surajtelidevara4@gmail.com`!
+Test email successfully sent to `your-email@gmail.com`!
 
 ---
 
@@ -10,7 +10,7 @@ Test email successfully sent to `surajtelidevara4@gmail.com`!
 
 **Go to:** https://mail.google.com/
 
-**Login:** surajtelidevara4@gmail.com
+**Login:** your-email@gmail.com
 
 **Search for:** "WorkNex Password Reset OTP"
 
@@ -22,7 +22,7 @@ Test email successfully sent to `surajtelidevara4@gmail.com`!
 
 **Email looks like:**
 ```
-From: surajtelidevara4@gmail.com
+From: your-email@gmail.com
 Subject: WorkNex Password Reset OTP
 
 🔐 WorkNex Password Reset
@@ -64,17 +64,17 @@ npx expo start
 
 **2. In App:**
 - Login screen → "Forgot Password?"
-- Enter email: `surajtelidevara4@gmail.com` (or your registered user email)
+- Enter email: `your-email@gmail.com` (or your registered user email)
 - Tap "Send OTP"
 
 **3. Check Backend Console:**
 You should see:
 ```
-🔑 Forgot password request for email: surajtelidevara4@gmail.com
-✅ User found: surajtelidevara4@gmail.com
+🔑 Forgot password request for email: your-email@gmail.com
+✅ User found: your-email@gmail.com
 🔢 Generated OTP: 456789
 💾 OTP saved to database
-📧 Attempting to send OTP email to: surajtelidevara4@gmail.com
+📧 Attempting to send OTP email to: your-email@gmail.com
 ✅ Email sent successfully!
   Message ID: <...>
   Response: 250 2.0.0 OK
@@ -104,7 +104,7 @@ npm start
 **2. In Browser:**
 - Open: http://localhost:3000
 - Click "Forgot Password?"
-- Enter email: `surajtelidevara4@gmail.com`
+- Enter email: `your-email@gmail.com`
 - Click "Send OTP"
 
 **3. Check Backend Console** (same as above)
@@ -128,9 +128,9 @@ npm start
    - Next emails will go to Inbox
 
 **To prevent future SPAM:**
-1. Add `surajtelidevara4@gmail.com` to contacts
+1. Add `your-email@gmail.com` to contacts
 2. Mark first email as "Not spam"
-3. Create filter: From `surajtelidevara4@gmail.com` → Never send to Spam
+3. Create filter: From `your-email@gmail.com` → Never send to Spam
 
 ---
 
@@ -164,7 +164,7 @@ npm start
 1. ✅ Backend console shows "Email sent successfully"?
 2. ✅ Email address correct ga type chesava?
 3. ✅ SPAM folder check chesava?
-4. ✅ Gmail lo login chesava (surajtelidevara4@gmail.com)?
+4. ✅ Gmail lo login chesava (your-email@gmail.com)?
 
 ---
 
@@ -179,7 +179,7 @@ npm start
 ✅ Gmail Response: 250 2.0.0 OK
 ```
 
-**Test OTP sent to:** surajtelidevara4@gmail.com  
+**Test OTP sent to:** your-email@gmail.com  
 **Test OTP:** 123456
 
 **GO CHECK YOUR EMAIL NOW!** 📧

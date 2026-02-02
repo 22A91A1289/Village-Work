@@ -6,17 +6,20 @@ import { Platform } from 'react-native';
 // $env:EXPO_PUBLIC_API_BASE_URL="http://<YOUR_PC_IP>:5001"
 const ENV_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
+// Production backend (Render)
+const PRODUCTION_API_URL = 'https://village-work.onrender.com';
+
 // Your computer's local IP address - use this for physical devices and Expo Go
 const LOCAL_IP = '192.168.31.14';
 
 // Default base URL:
-// - Physical devices/Expo Go: use computer's local IP
-// - Android emulator: use 10.0.2.2 to access host machine
-// - iOS simulator / web: use localhost
+// - ENV override: EXPO_PUBLIC_API_BASE_URL
+// - Production build (APK): Render URL
+// - Development: local IP (device) or localhost (simulator)
 export const API_BASE_URL =
   ENV_BASE_URL ||
-  (Platform.OS === 'android' && __DEV__ ? `http://${LOCAL_IP}:5001` : 
-   Platform.OS === 'ios' && __DEV__ ? `http://${LOCAL_IP}:5001` : 
+  (!__DEV__ ? PRODUCTION_API_URL : 
+   (Platform.OS === 'android' || Platform.OS === 'ios') ? `http://${LOCAL_IP}:5001` : 
    'http://localhost:5001');
 
 // Log the API URL for debugging

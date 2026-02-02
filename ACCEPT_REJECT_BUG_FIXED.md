@@ -80,7 +80,7 @@ APPLICATION:
   ID: 697b118754473304f250791a
   Job: Farming helper needed (Farming)
   Worker: Suraj
-  Email: surajtelidevara9@gmail.com
+  Email: employer@example.com
   Phone: 7396531079
   Status: pending ← Ready to accept/reject!
   Applied: 29/1/2026, 1:21:35 pm
@@ -143,7 +143,7 @@ Cmd + Shift + R (Mac)
 
 2. **Login as Employer:**
    ```
-   Email: surajtelidevara4@gmail.com
+   Email: user@example.com
    Password: [your password]
    ```
 
@@ -343,7 +343,7 @@ npm run dev
 🚀 WorkNex Server running on port 5001
 📡 Environment: development
 🌐 API URL: http://localhost:5001
-✅ MongoDB Connected: testing-shard-00-00.9syxs.mongodb.net
+✅ MongoDB Connected: cluster.mongodb.net
 ```
 
 **If not running:**

@@ -49,9 +49,9 @@ User Forgot Password
 ```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=surajtelidevara4@gmail.com
-SMTP_PASS=cohe ziie tuug cqxw
-SMTP_FROM=surajtelidevara4@gmail.com
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM=your-email@gmail.com
 ```
 
 ### Key Settings:
@@ -521,9 +521,9 @@ import ForgotPassword from './pages/ForgotPassword';
 ```env
 SMTP_HOST=smtp.gmail.com               ✅ Must be smtp.gmail.com
 SMTP_PORT=587                          ✅ TLS port
-SMTP_USER=surajtelidevara4@gmail.com  ✅ Your Gmail
-SMTP_PASS=cohe ziie tuug cqxw        ✅ App Password (with spaces)
-SMTP_FROM=surajtelidevara4@gmail.com  ✅ Same as SMTP_USER
+SMTP_USER=your-email@gmail.com  ✅ Your Gmail
+SMTP_PASS=your-app-password        ✅ App Password (with spaces)
+SMTP_FROM=your-email@gmail.com  ✅ Same as SMTP_USER
 ```
 
 ### Test Mobile App:
@@ -550,9 +550,9 @@ npx expo start
    📧 Email Configuration Check:
      SMTP_HOST: smtp.gmail.com
      SMTP_PORT: 587
-     SMTP_USER: surajtelidevara4@gmail.com
+     SMTP_USER: your-email@gmail.com
      SMTP_PASS: ✅ Present
-     SMTP_FROM: surajtelidevara4@gmail.com
+     SMTP_FROM: your-email@gmail.com
    🔑 Forgot password request for email: worker@example.com
    ✅ User found: worker@example.com
    🔢 Generated OTP: 123456
@@ -610,7 +610,7 @@ Look for these logs when you click "Send OTP":
 💾 OTP saved to database
 📧 Attempting to send OTP email to: worker@example.com
 📧 Creating SMTP transport with: { host: 'smtp.gmail.com', port: 587, ... }
-📧 Sending email from: surajtelidevara4@gmail.com
+📧 Sending email from: your-email@gmail.com
 📧 Sending email to: worker@example.com
 ✅ Email sent successfully!
 ```
@@ -820,11 +820,11 @@ This is an automated email from WorkNex. Please do not reply.
 📧 Email Configuration Check:
   SMTP_HOST: smtp.gmail.com
   SMTP_PORT: 587
-  SMTP_USER: surajtelidevara4@gmail.com
+  SMTP_USER: your-email@gmail.com
   SMTP_PASS: ✅ Present
-  SMTP_FROM: surajtelidevara4@gmail.com
-📧 Creating SMTP transport with: { host: 'smtp.gmail.com', port: 587, secure: false, user: 'surajtelidevara4@gmail.com' }
-📧 Sending email from: surajtelidevara4@gmail.com
+  SMTP_FROM: your-email@gmail.com
+📧 Creating SMTP transport with: { host: 'smtp.gmail.com', port: 587, secure: false, user: 'your-email@gmail.com' }
+📧 Sending email from: your-email@gmail.com
 📧 Sending email to: worker@example.com
 ✅ Email sent successfully!
   Message ID: <abc123@gmail.com>
@@ -848,7 +848,7 @@ This is an automated email from WorkNex. Please do not reply.
   Error code: EAUTH
 
 🚨 AUTHENTICATION FAILED:
-  - Check if SMTP_USER is correct: surajtelidevara4@gmail.com
+  - Check if SMTP_USER is correct: your-email@gmail.com
   - Check if SMTP_PASS (App Password) is correct
   - For Gmail, enable 2FA and create App Password at: https://myaccount.google.com/apppasswords
   - App Password format: "xxxx xxxx xxxx xxxx" (4 groups of 4)
@@ -868,9 +868,9 @@ SMTP_FROM="WorkNex <no-reply@...>"    ❌ Has quotes
 ```env
 SMTP_HOST=smtp.gmail.com              ✅ Correct Gmail SMTP
 SMTP_PORT=587                         ✅ TLS port
-SMTP_USER=surajtelidevara4@gmail.com  ✅ Your Gmail
-SMTP_PASS=cohe ziie tuug cqxw        ✅ App Password
-SMTP_FROM=surajtelidevara4@gmail.com  ✅ Same as SMTP_USER
+SMTP_USER=your-email@gmail.com  ✅ Your Gmail
+SMTP_PASS=your-app-password        ✅ App Password
+SMTP_FROM=your-email@gmail.com  ✅ Same as SMTP_USER
 ```
 
 **Changes made:**
@@ -915,9 +915,9 @@ Look for:
 📧 Email Configuration Check:
   SMTP_HOST: smtp.gmail.com  ✅
   SMTP_PORT: 587  ✅
-  SMTP_USER: surajtelidevara4@gmail.com  ✅
+  SMTP_USER: your-email@gmail.com  ✅
   SMTP_PASS: ✅ Present
-  SMTP_FROM: surajtelidevara4@gmail.com  ✅
+  SMTP_FROM: your-email@gmail.com  ✅
 ✅ Email sent successfully!
 ```
 
@@ -952,13 +952,13 @@ Look for:
 - Click "Generate"
 
 **3. Copy Password:**
-- You'll get 16 characters like: `cohe ziie tuug cqxw`
+- You'll get 16 characters like: `your-app-password`
 - Copy this EXACTLY to `.env` SMTP_PASS
 - Spaces are okay and required
 
 **4. Update .env:**
 ```env
-SMTP_PASS=cohe ziie tuug cqxw
+SMTP_PASS=your-app-password
 ```
 
 **5. Restart Backend:**

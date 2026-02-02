@@ -25,7 +25,8 @@
         "WRITE_EXTERNAL_STORAGE",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
-      ]
+      ],
+      "package": "com.suraj1289.myapp"
     },
     "ios": {
       "supportsTablet": true,
@@ -41,6 +42,11 @@
     },
     "plugins": [
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4f097778-b97b-45d5-9b03-b2b3b8e47257"
+      }
+    }
   }
 }

@@ -243,7 +243,7 @@ GET /api/users/profile
 Response:
 {
   name: "Suraj Teli Devara",
-  email: "surajtelidevara4@gmail.com",
+  email: "user@example.com",
   phone: "7396531079",
   location: "Machavaram",
   skillLevel: "new",
@@ -253,7 +253,7 @@ Response:
   ↓
 ProfileScreen Shows:
   Name: "Suraj Teli Devara"  ✅ Real name!
-  Email: "surajtelidevara4@gmail.com"
+  Email: "user@example.com"
   Phone: "7396531079"
   Location: "Machavaram"
   Worker Type: "New Worker"
@@ -355,7 +355,7 @@ Location: Rajam, AP            ❌ Fake
 
 **After:**
 ```
-Email: surajtelidevara4@gmail.com  ✅ Real from DB
+Email: user@example.com  ✅ Real from DB
 Phone: 7396531079                  ✅ Real from DB
 Location: Machavaram               ✅ Real from DB
 ```
@@ -375,14 +375,14 @@ Location: Machavaram               ✅ Real from DB
 
 ```bash
 1. Login with real account:
-   - Email: surajtelidevara4@gmail.com
+   - Email: user@example.com
    - Password: (your password)
 
 2. Navigate to Profile
 
 3. Check:
    ✅ Name shows: "Telidevara Venkata Sai Phani Suraj"
-   ✅ Email shows: "surajtelidevara4@gmail.com"
+   ✅ Email shows: "user@example.com"
    ✅ Phone shows: "7396531079"
    ✅ Location shows: "Machavaram"
    ✅ NO fake skills section

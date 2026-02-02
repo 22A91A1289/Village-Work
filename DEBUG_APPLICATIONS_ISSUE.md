@@ -42,7 +42,7 @@ npm run dev
 **Expected Output:**
 ```
 🚀 WorkNex Server running on port 5001
-✅ MongoDB Connected: testing-shard-00-00.9syxs.mongodb.net
+✅ MongoDB Connected: cluster.mongodb.net
 ```
 
 **If not running:** Backend won't respond to API calls!

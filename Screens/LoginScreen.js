@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   View,
@@ -21,57 +21,8 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState('');
-
-  const roles = [
-    {
-      key: 'worker',
-      title: 'Worker',
-      subtitle: 'Find jobs and work opportunities',
-      icon: 'construct',
-      color: '#4F46E5',
-      demoEmail: 'worker@vwork.com',
-    },
-    {
-      key: 'recruiter',
-      title: 'Recruiter',
-      subtitle: 'Post jobs and hire workers',
-      icon: 'business',
-      color: '#10B981',
-      demoEmail: 'recruiter@vwork.com',
-    },
-  ];
-
-  useEffect(() => {
-    checkSelectedRole();
-  }, []);
-
-  const checkSelectedRole = async () => {
-    try {
-      const savedRole = await AsyncStorage.getItem('userRole');
-      if (savedRole) {
-        setSelectedRole(savedRole);
-        const role = roles.find(r => r.key === savedRole);
-        if (role) {
-          setEmail(role.demoEmail);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking selected role:', error);
-    }
-  };
-
-  const handleRoleSelect = (role) => {
-    setSelectedRole(role.key);
-    setEmail(role.demoEmail);
-  };
 
   const handleLogin = async () => {
-    if (!selectedRole) {
-      Alert.alert('Error', 'Please select your role first');
-      return;
-    }
-
     if (!email.trim() || !password.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -147,20 +98,10 @@ const LoginScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Selected Role Display */}
-          {selectedRole && (
-            <View style={styles.roleContainer}>
-              <Text style={styles.roleTitle}>Selected Role</Text>
-              <Text style={styles.roleSubtitle}>You're signing in as a {selectedRole}</Text>
-            </View>
-          )}
-
-                    {/* Login Form */}
+          {/* Login Form */}
           <View style={styles.formContainer}>
             <Text style={styles.welcomeText}>Welcome Back!</Text>
-            <Text style={styles.subtitleText}>
-              {selectedRole ? `Sign in to your ${selectedRole} account` : 'Sign in to your account'}
-            </Text>
+            <Text style={styles.subtitleText}>Sign in to your worker account</Text>
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Email Address</Text>
@@ -236,15 +177,6 @@ const LoginScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
-
-          {/* Demo Credentials */}
-          {selectedRole && (
-            <View style={styles.demoContainer}>
-              <Text style={styles.demoTitle}>Demo Credentials:</Text>
-              <Text style={styles.demoText}>Email: {email}</Text>
-              <Text style={styles.demoText}>Password: (any password)</Text>
-            </View>
-          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
