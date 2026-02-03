@@ -59,6 +59,14 @@ async function sendOtpEmail({ to, otp }) {
     console.log('  To:', to);
     console.log('  OTP:', otp);
 
+    // Skip actual send when testing (e.g. Thunder Client) - set SKIP_EMAIL_SEND=1 in .env
+    const skipEnv = (process.env.SKIP_EMAIL_SEND || '').toString().trim().toLowerCase();
+    const skipSend = skipEnv === '1' || skipEnv === 'true' || skipEnv === 'yes';
+    if (skipSend) {
+      console.log('⏭️ SKIP_EMAIL_SEND is set – not sending email. OTP for', to, ':', otp);
+      return { messageId: 'skip-' + Date.now(), response: 'Skipped for testing' };
+    }
+
     const transporter = createTransport();
     
     // Remove any quotes from SMTP_FROM
@@ -89,13 +97,27 @@ async function sendOtpEmail({ to, otp }) {
     console.log('📧 Sending email from:', cleanFrom);
     console.log('📧 Sending email to:', to);
     
-    const info = await transporter.sendMail({
-      from: cleanFrom,
-      to,
-      subject,
-      text,
-      html
-    });
+    const sendWithRetry = async (attempt = 1) => {
+      const maxAttempts = 2;
+      try {
+        return await transporter.sendMail({
+          from: cleanFrom,
+          to,
+          subject,
+          text,
+          html
+        });
+      } catch (err) {
+        const isTimeout = err.code === 'ETIMEDOUT' || err.code === 'ESOCKET' || /timeout/i.test(err.message || '');
+        if (isTimeout && attempt < maxAttempts) {
+          console.log(`📧 Send attempt ${attempt} timed out, retrying (${attempt + 1}/${maxAttempts})...`);
+          return sendWithRetry(attempt + 1);
+        }
+        throw err;
+      }
+    };
+
+    const info = await sendWithRetry();
 
     console.log('✅ Email sent successfully!');
     console.log('  Message ID:', info.messageId);

@@ -169,6 +169,7 @@ router.post('/login', async (req, res) => {
 // @desc    Send OTP to email for password reset
 // @access  Public
 const forgotPasswordHandler = async (req, res) => {
+  let otp = null; // so we can use in catch for dev fallback
   try {
     const { email } = req.body;
 
@@ -189,7 +190,7 @@ const forgotPasswordHandler = async (req, res) => {
     console.log('✅ User found:', user.email);
 
     // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otp = Math.floor(100000 + Math.random() * 900000).toString();
     console.log('🔢 Generated OTP:', otp);
     
     const otpHash = await bcrypt.hash(otp, 10);
@@ -201,12 +202,15 @@ const forgotPasswordHandler = async (req, res) => {
     
     console.log('💾 OTP saved to database, expires at:', expiresAt);
 
-    // Send OTP email
-    console.log('📧 Attempting to send OTP email to:', user.email);
-    await sendOtpEmail({ to: user.email, otp });
+    // Respond immediately so the client never hits "email taking too long"
+    res.json({ success: true, message: 'If an account exists, OTP was sent to email. Check your inbox (and spam).' });
 
-    console.log('✅ OTP sent successfully to:', user.email);
-    res.json({ success: true, message: 'OTP sent to email' });
+    // Send OTP email in background – don't block the response
+    const recipientEmail = user.email;
+    console.log('📧 Sending OTP email in background to:', recipientEmail);
+    sendOtpEmail({ to: recipientEmail, otp })
+      .then(() => console.log('✅ OTP email sent successfully to:', recipientEmail))
+      .catch((err) => console.error('❌ Background OTP email failed for', recipientEmail, err.message));
   } catch (error) {
     console.error('❌ Forgot password error:', error);
     console.error('Error details:', {
@@ -214,11 +218,7 @@ const forgotPasswordHandler = async (req, res) => {
       message: error.message,
       stack: error.stack
     });
-    const isTimeout = error.code === 'ETIMEDOUT' || error.code === 'ESOCKET' || /timeout/i.test(error.message || '');
-    const message = isTimeout
-      ? 'Email service is taking too long. Please check your internet connection and try again in a moment.'
-      : error.message;
-    res.status(500).json({ error: message });
+    res.status(500).json({ error: error.message });
   }
 };
 router.post('/forgot-password', forgotPasswordHandler);
