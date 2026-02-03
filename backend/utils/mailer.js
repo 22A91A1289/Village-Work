@@ -19,6 +19,11 @@ function ensureEmailConfig() {
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
     throw new Error('Email service not configured. Please set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');
   }
+  // Gmail App Password is 16 chars; if SMTP_PASS has spaces, use quotes in .env: SMTP_PASS="xxxx xxxx xxxx xxxx"
+  const passLen = (SMTP_PASS || '').replace(/\s/g, '').length;
+  if (passLen > 0 && passLen < 16 && (SMTP_HOST || '').includes('gmail')) {
+    console.warn('⚠️ SMTP_PASS looks short (' + passLen + ' chars). In .env use quotes: SMTP_PASS="your app password"');
+  }
 }
 
 function createTransport() {
@@ -26,6 +31,8 @@ function createTransport() {
   
   // Remove any quotes and whitespace from SMTP_FROM
   const cleanFrom = SMTP_FROM.replace(/["']/g, '').trim();
+  // Gmail App Password: strip spaces so it works with or without quotes in .env (use SMTP_PASS="xxxx xxxx xxxx xxxx")
+  const smtpPass = (SMTP_PASS || '').replace(/["']/g, '').replace(/\s/g, '').trim();
   
   const port = Number(SMTP_PORT);
   const config = {
@@ -33,8 +40,8 @@ function createTransport() {
     port,
     secure: port === 465, // true for 465, false for other ports (587 uses STARTTLS)
     auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS
+      user: (SMTP_USER || '').trim(),
+      pass: smtpPass
     },
     // Prevent "Connection timeout" on slow networks or SMTP servers (e.g. Gmail)
     connectionTimeout: 60000,  // 60s to establish connection

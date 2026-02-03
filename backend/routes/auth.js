@@ -169,7 +169,6 @@ router.post('/login', async (req, res) => {
 // @desc    Send OTP to email for password reset
 // @access  Public
 const forgotPasswordHandler = async (req, res) => {
-  let otp = null; // so we can use in catch for dev fallback
   try {
     const { email } = req.body;
 
@@ -190,7 +189,7 @@ const forgotPasswordHandler = async (req, res) => {
     console.log('✅ User found:', user.email);
 
     // Generate 6-digit OTP
-    otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     console.log('🔢 Generated OTP:', otp);
     
     const otpHash = await bcrypt.hash(otp, 10);
@@ -210,7 +209,11 @@ const forgotPasswordHandler = async (req, res) => {
     console.log('📧 Sending OTP email in background to:', recipientEmail);
     sendOtpEmail({ to: recipientEmail, otp })
       .then(() => console.log('✅ OTP email sent successfully to:', recipientEmail))
-      .catch((err) => console.error('❌ Background OTP email failed for', recipientEmail, err.message));
+      .catch((err) => {
+        console.error('❌ Background OTP email failed for', recipientEmail);
+        console.error('   Error:', err.message);
+        console.error('   Code:', err.code, '– Check SMTP in .env (SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM). Gmail: use App Password.');
+      });
   } catch (error) {
     console.error('❌ Forgot password error:', error);
     console.error('Error details:', {
