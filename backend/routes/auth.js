@@ -168,7 +168,7 @@ router.post('/login', async (req, res) => {
 // @route   POST /api/auth/forgot-password
 // @desc    Send OTP to email for password reset
 // @access  Public
-router.post('/forgot-password', async (req, res) => {
+const forgotPasswordHandler = async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -214,9 +214,15 @@ router.post('/forgot-password', async (req, res) => {
       message: error.message,
       stack: error.stack
     });
-    res.status(500).json({ error: error.message });
+    const isTimeout = error.code === 'ETIMEDOUT' || error.code === 'ESOCKET' || /timeout/i.test(error.message || '');
+    const message = isTimeout
+      ? 'Email service is taking too long. Please check your internet connection and try again in a moment.'
+      : error.message;
+    res.status(500).json({ error: message });
   }
-});
+};
+router.post('/forgot-password', forgotPasswordHandler);
+router.post('/forgot-password/', forgotPasswordHandler);  // allow trailing slash
 
 // @route   POST /api/auth/reset-password
 // @desc    Reset password using email + OTP

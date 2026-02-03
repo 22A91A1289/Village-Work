@@ -9,8 +9,9 @@ npm install
 # Backend
 cd backend && npm install
 
-# Web dashboard
-cd web-dashboard && npm install
+# Web dashboard (separate repo: https://github.com/22A91A1289/worknex-dashboard)
+git clone https://github.com/22A91A1289/worknex-dashboard.git
+cd worknex-dashboard && npm install
 ```
 
 ## Run
@@ -25,15 +26,15 @@ cd backend && npm run dev
 # Mobile app (from project root)
 npm start
 
-# Web dashboard (from project root)
-cd web-dashboard && npm start
+# Web dashboard (from worknex-dashboard repo folder)
+cd worknex-dashboard && npm start
 ```
 
 ## Build
 
 ```bash
-# Web dashboard (for Vercel / static host)
-cd web-dashboard && npm run build
+# Web dashboard (from worknex-dashboard repo folder)
+cd worknex-dashboard && npm run build
 
 # Android APK (Expo EAS)
 eas build --platform android --profile preview
@@ -45,7 +46,7 @@ eas build --platform android --profile preview
 - **Web dashboard:** `REACT_APP_API_BASE_URL` (e.g. `https://village-work.onrender.com`)
 - **Mobile:** `utils/api.js` – `LOCAL_IP` or `EXPO_PUBLIC_API_BASE_URL` for device
 
-## Vercel
+## Vercel (web dashboard)
 
-- Root Directory: **web-dashboard**
+- Repo: **https://github.com/22A91A1289/worknex-dashboard** (separate repo)
 - Build: `npm run build` | Output: **build**

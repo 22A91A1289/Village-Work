@@ -113,9 +113,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
+// 404 handler (include path/method to debug wrong URLs)
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  console.log(`⚠️ 404: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ error: 'Route not found', path: req.originalUrl || req.path, method: req.method });
 });
 
 // Socket.io connection handling

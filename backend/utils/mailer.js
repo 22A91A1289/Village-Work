@@ -27,14 +27,20 @@ function createTransport() {
   // Remove any quotes and whitespace from SMTP_FROM
   const cleanFrom = SMTP_FROM.replace(/["']/g, '').trim();
   
+  const port = Number(SMTP_PORT);
   const config = {
     host: SMTP_HOST,
-    port: Number(SMTP_PORT),
-    secure: Number(SMTP_PORT) === 465, // true for 465, false for other ports (587 uses STARTTLS)
+    port,
+    secure: port === 465, // true for 465, false for other ports (587 uses STARTTLS)
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASS
-    }
+    },
+    // Prevent "Connection timeout" on slow networks or SMTP servers (e.g. Gmail)
+    connectionTimeout: 60000,  // 60s to establish connection
+    greetingTimeout: 30000,    // 30s for SMTP greeting
+    socketTimeout: 60000,     // 60s for socket inactivity
+    ...(port === 587 && { requireTLS: true })  // Use STARTTLS on port 587
   };
 
   console.log('📧 Creating SMTP transport with:', {
