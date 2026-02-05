@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
-const { sendOtpEmail } = require('../utils/mailer');
+const { sendOtpEmail, isEmailConfigured } = require('../utils/mailer');
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
@@ -198,8 +198,18 @@ const forgotPasswordHandler = async (req, res) => {
     user.resetOtpHash = otpHash;
     user.resetOtpExpires = expiresAt;
     await user.save();
-    
+
     console.log('💾 OTP saved to database, expires at:', expiresAt);
+
+    // When SMTP is not configured, return OTP in response so dashboard can show it (user can still reset password)
+    if (!isEmailConfigured()) {
+      console.log('📧 SMTP not configured – returning OTP in response for dashboard');
+      return res.json({
+        success: true,
+        message: 'Use the OTP shown below (email not configured on server).',
+        otp
+      });
+    }
 
     // Respond immediately so the client never hits "email taking too long"
     res.json({ success: true, message: 'If an account exists, OTP was sent to email. Check your inbox (and spam).' });
@@ -210,9 +220,10 @@ const forgotPasswordHandler = async (req, res) => {
     sendOtpEmail({ to: recipientEmail, otp })
       .then(() => console.log('✅ OTP email sent successfully to:', recipientEmail))
       .catch((err) => {
-        console.error('❌ Background OTP email failed for', recipientEmail);
+        console.error('❌ OTP EMAIL NOT SENT – user will not receive OTP.');
+        console.error('   To:', recipientEmail);
         console.error('   Error:', err.message);
-        console.error('   Code:', err.code, '– Check SMTP in .env (SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM). Gmail: use App Password.');
+        console.error('   On Render: set Environment Variables: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM. Gmail: use App Password.');
       });
   } catch (error) {
     console.error('❌ Forgot password error:', error);

@@ -1,14 +1,36 @@
 const nodemailer = require('nodemailer');
+let Resend;
+try {
+  Resend = require('resend').Resend;
+} catch (_) {
+  Resend = null;
+}
 
 const {
   SMTP_HOST,
   SMTP_PORT,
   SMTP_USER,
   SMTP_PASS,
-  SMTP_FROM
+  SMTP_FROM,
+  RESEND_API_KEY,
+  RESEND_FROM
 } = process.env;
 
+/** Use Resend API (HTTPS) when API key is set. Works on Render free tier; SMTP is blocked there. */
+function useResend() {
+  return !!(RESEND_API_KEY && (RESEND_FROM || SMTP_FROM));
+}
+
+/** Returns true if email can be sent (Resend API or SMTP configured). */
+function isEmailConfigured() {
+  return useResend() || !!(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM);
+}
+
 function ensureEmailConfig() {
+  if (useResend()) {
+    console.log('📧 Email: Using Resend API (RESEND_API_KEY + from address)');
+    return;
+  }
   console.log('📧 Email Configuration Check:');
   console.log('  SMTP_HOST:', SMTP_HOST || '❌ Missing');
   console.log('  SMTP_PORT:', SMTP_PORT || '❌ Missing');
@@ -17,13 +39,66 @@ function ensureEmailConfig() {
   console.log('  SMTP_FROM:', SMTP_FROM || '❌ Missing');
 
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
-    throw new Error('Email service not configured. Please set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in .env');
+    throw new Error('Email service not configured. Set RESEND_API_KEY + RESEND_FROM (or SMTP_* vars) in .env');
   }
   // Gmail App Password is 16 chars; if SMTP_PASS has spaces, use quotes in .env: SMTP_PASS="xxxx xxxx xxxx xxxx"
   const passLen = (SMTP_PASS || '').replace(/\s/g, '').length;
   if (passLen > 0 && passLen < 16 && (SMTP_HOST || '').includes('gmail')) {
     console.warn('⚠️ SMTP_PASS looks short (' + passLen + ' chars). In .env use quotes: SMTP_PASS="your app password"');
   }
+}
+
+/** OTP email HTML (shared by Resend and SMTP). */
+function getOtpEmailContent(otp) {
+  const text = `Your WorkNex password reset OTP is ${otp}. It expires in 10 minutes.`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 10px;">
+      <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="color: #4F46E5; margin-bottom: 20px;">🔐 WorkNex Password Reset</h2>
+        <p style="color: #374151; font-size: 16px;">Your OTP for password reset is:</p>
+        <div style="background-color: #F3F4F6; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+          <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #4F46E5;">
+            ${otp}
+          </div>
+        </div>
+        <p style="color: #6B7280; font-size: 14px;">⏱️ This OTP will expire in <strong>10 minutes</strong>.</p>
+        <p style="color: #6B7280; font-size: 14px;">🔒 If you did not request this, please ignore this email.</p>
+        <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 20px 0;">
+        <p style="color: #9CA3AF; font-size: 12px; text-align: center;">
+          This is an automated email from WorkNex. Please do not reply.
+        </p>
+      </div>
+    </div>
+  `;
+  return { text, html };
+}
+
+async function sendOtpEmailViaResend({ to, otp }) {
+  ensureEmailConfig();
+  if (!Resend) {
+    throw new Error('Resend package not installed. Run: npm install resend');
+  }
+  const from = (RESEND_FROM || SMTP_FROM || '').replace(/["']/g, '').trim();
+  if (!from) {
+    throw new Error('Set RESEND_FROM or SMTP_FROM (e.g. WorkNex <onboarding@resend.dev>)');
+  }
+  const resend = new Resend(RESEND_API_KEY.trim());
+  const { text, html } = getOtpEmailContent(otp);
+  const subject = 'WorkNex Password Reset OTP';
+  console.log('📧 Sending via Resend API from:', from, 'to:', to);
+  const { data, error } = await resend.emails.send({
+    from,
+    to: [to],
+    subject,
+    text,
+    html
+  });
+  if (error) {
+    console.error('❌ Resend API error:', error);
+    throw new Error(error.message || 'Failed to send email via Resend');
+  }
+  console.log('✅ Email sent via Resend. Id:', data?.id);
+  return { messageId: data?.id || 'resend-' + Date.now(), response: 'Resend' };
 }
 
 function createTransport() {
@@ -74,32 +149,18 @@ async function sendOtpEmail({ to, otp }) {
       return { messageId: 'skip-' + Date.now(), response: 'Skipped for testing' };
     }
 
+    // Resend API (HTTPS) – works on Render free tier where SMTP is blocked
+    if (useResend()) {
+      return await sendOtpEmailViaResend({ to, otp });
+    }
+
     const transporter = createTransport();
     
     // Remove any quotes from SMTP_FROM
     const cleanFrom = SMTP_FROM.replace(/["']/g, '').trim();
     
     const subject = 'WorkNex Password Reset OTP';
-    const text = `Your WorkNex password reset OTP is ${otp}. It expires in 10 minutes.`;
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 10px;">
-        <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h2 style="color: #4F46E5; margin-bottom: 20px;">🔐 WorkNex Password Reset</h2>
-          <p style="color: #374151; font-size: 16px;">Your OTP for password reset is:</p>
-          <div style="background-color: #F3F4F6; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-            <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #4F46E5;">
-              ${otp}
-            </div>
-          </div>
-          <p style="color: #6B7280; font-size: 14px;">⏱️ This OTP will expire in <strong>10 minutes</strong>.</p>
-          <p style="color: #6B7280; font-size: 14px;">🔒 If you did not request this, please ignore this email.</p>
-          <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 20px 0;">
-          <p style="color: #9CA3AF; font-size: 12px; text-align: center;">
-            This is an automated email from WorkNex. Please do not reply.
-          </p>
-        </div>
-      </div>
-    `;
+    const { text, html } = getOtpEmailContent(otp);
 
     console.log('📧 Sending email from:', cleanFrom);
     console.log('📧 Sending email to:', to);
@@ -145,11 +206,9 @@ async function sendOtpEmail({ to, otp }) {
       console.error('  - For Gmail, enable 2FA and create App Password at: https://myaccount.google.com/apppasswords');
       console.error('  - App Password format: "xxxx xxxx xxxx xxxx" (4 groups of 4)');
     } else if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
-      console.error('\n🚨 CONNECTION FAILED:');
-      console.error('  - Check if SMTP_HOST is correct:', SMTP_HOST);
-      console.error('  - For Gmail, use: smtp.gmail.com');
-      console.error('  - Check if SMTP_PORT is correct:', SMTP_PORT);
-      console.error('  - For Gmail, use: 587 (TLS) or 465 (SSL)');
+      console.error('\n🚨 CONNECTION FAILED (often on Render free tier – SMTP ports are blocked):');
+      console.error('  - Use Resend instead: set RESEND_API_KEY + RESEND_FROM in env (see backend/RENDER-SMTP.md)');
+      console.error('  - Or check SMTP_HOST:', SMTP_HOST, 'SMTP_PORT:', SMTP_PORT);
     } else if (error.responseCode === 550 || error.responseCode === 554) {
       console.error('\n🚨 EMAIL REJECTED:');
       console.error('  - Recipient email might be invalid');
@@ -160,4 +219,4 @@ async function sendOtpEmail({ to, otp }) {
   }
 }
 
-module.exports = { sendOtpEmail };
+module.exports = { sendOtpEmail, isEmailConfigured };
