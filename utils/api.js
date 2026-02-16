@@ -6,8 +6,8 @@ import { Platform } from 'react-native';
 // $env:EXPO_PUBLIC_API_BASE_URL="http://<YOUR_PC_IP>:5001"
 const ENV_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-// Production backend (Render)
-const PRODUCTION_API_URL = 'https://village-work.onrender.com';
+// Production backend (Vercel)
+const PRODUCTION_API_URL = 'https://village-work.vercel.app';
 
 // Your computer's local IP address - use this for physical devices and Expo Go
 const LOCAL_IP = '192.168.31.14';

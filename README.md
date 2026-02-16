@@ -43,7 +43,7 @@ eas build --platform android --profile preview
 ## Env
 
 - **Backend:** `backend/.env` – `PORT`, `MONGODB_URI`, `JWT_SECRET`
-- **Web dashboard:** `REACT_APP_API_BASE_URL` (e.g. `https://village-work.onrender.com`)
+- **Web dashboard:** `REACT_APP_API_BASE_URL` (e.g. `https://village-work.vercel.app`)
 - **Mobile:** `utils/api.js` – `LOCAL_IP` or `EXPO_PUBLIC_API_BASE_URL` for device
 
 ## Vercel (web dashboard)

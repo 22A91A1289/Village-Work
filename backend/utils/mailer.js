@@ -1,36 +1,19 @@
 const nodemailer = require('nodemailer');
-let Resend;
-try {
-  Resend = require('resend').Resend;
-} catch (_) {
-  Resend = null;
-}
 
 const {
   SMTP_HOST,
   SMTP_PORT,
   SMTP_USER,
   SMTP_PASS,
-  SMTP_FROM,
-  RESEND_API_KEY,
-  RESEND_FROM
+  SMTP_FROM
 } = process.env;
 
-/** Use Resend API (HTTPS) when API key is set. Works on Render free tier; SMTP is blocked there. */
-function useResend() {
-  return !!(RESEND_API_KEY && (RESEND_FROM || SMTP_FROM));
-}
-
-/** Returns true if email can be sent (Resend API or SMTP configured). */
+/** Returns true if email can be sent (SMTP configured). */
 function isEmailConfigured() {
-  return useResend() || !!(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM);
+  return !!(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM);
 }
 
 function ensureEmailConfig() {
-  if (useResend()) {
-    console.log('📧 Email: Using Resend API (RESEND_API_KEY + from address)');
-    return;
-  }
   console.log('📧 Email Configuration Check:');
   console.log('  SMTP_HOST:', SMTP_HOST || '❌ Missing');
   console.log('  SMTP_PORT:', SMTP_PORT || '❌ Missing');
@@ -39,7 +22,7 @@ function ensureEmailConfig() {
   console.log('  SMTP_FROM:', SMTP_FROM || '❌ Missing');
 
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
-    throw new Error('Email service not configured. Set RESEND_API_KEY + RESEND_FROM (or SMTP_* vars) in .env');
+    throw new Error('Email service not configured. Set SMTP_* vars in .env');
   }
   // Gmail App Password is 16 chars; if SMTP_PASS has spaces, use quotes in .env: SMTP_PASS="xxxx xxxx xxxx xxxx"
   const passLen = (SMTP_PASS || '').replace(/\s/g, '').length;
@@ -71,34 +54,6 @@ function getOtpEmailContent(otp) {
     </div>
   `;
   return { text, html };
-}
-
-async function sendOtpEmailViaResend({ to, otp }) {
-  ensureEmailConfig();
-  if (!Resend) {
-    throw new Error('Resend package not installed. Run: npm install resend');
-  }
-  const from = (RESEND_FROM || SMTP_FROM || '').replace(/["']/g, '').trim();
-  if (!from) {
-    throw new Error('Set RESEND_FROM or SMTP_FROM (e.g. WorkNex <onboarding@resend.dev>)');
-  }
-  const resend = new Resend(RESEND_API_KEY.trim());
-  const { text, html } = getOtpEmailContent(otp);
-  const subject = 'WorkNex Password Reset OTP';
-  console.log('📧 Sending via Resend API from:', from, 'to:', to);
-  const { data, error } = await resend.emails.send({
-    from,
-    to: [to],
-    subject,
-    text,
-    html
-  });
-  if (error) {
-    console.error('❌ Resend API error:', error);
-    throw new Error(error.message || 'Failed to send email via Resend');
-  }
-  console.log('✅ Email sent via Resend. Id:', data?.id);
-  return { messageId: data?.id || 'resend-' + Date.now(), response: 'Resend' };
 }
 
 function createTransport() {
@@ -147,11 +102,6 @@ async function sendOtpEmail({ to, otp }) {
     if (skipSend) {
       console.log('⏭️ SKIP_EMAIL_SEND is set – not sending email. OTP for', to, ':', otp);
       return { messageId: 'skip-' + Date.now(), response: 'Skipped for testing' };
-    }
-
-    // Resend API (HTTPS) – works on Render free tier where SMTP is blocked
-    if (useResend()) {
-      return await sendOtpEmailViaResend({ to, otp });
     }
 
     const transporter = createTransport();
@@ -206,9 +156,8 @@ async function sendOtpEmail({ to, otp }) {
       console.error('  - For Gmail, enable 2FA and create App Password at: https://myaccount.google.com/apppasswords');
       console.error('  - App Password format: "xxxx xxxx xxxx xxxx" (4 groups of 4)');
     } else if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
-      console.error('\n🚨 CONNECTION FAILED (often on Render free tier – SMTP ports are blocked):');
-      console.error('  - Use Resend instead: set RESEND_API_KEY + RESEND_FROM in env (see backend/RENDER-SMTP.md)');
-      console.error('  - Or check SMTP_HOST:', SMTP_HOST, 'SMTP_PORT:', SMTP_PORT);
+      console.error('\n🚨 CONNECTION FAILED:');
+      console.error('  - Check SMTP_HOST:', SMTP_HOST, 'SMTP_PORT:', SMTP_PORT);
     } else if (error.responseCode === 550 || error.responseCode === 554) {
       console.error('\n🚨 EMAIL REJECTED:');
       console.error('  - Recipient email might be invalid');
