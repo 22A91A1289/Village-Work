@@ -1373,6 +1373,7 @@ const HomeScreen = ({ navigation }) => {
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={Platform.OS === 'android'}
       >
 
         {/* Daily Work Categories */}
@@ -1778,6 +1779,7 @@ function createStyles(r) {
   },
   scrollView: {
     flex: 1,
+    minHeight: 0,
   },
   skillCard: {
     backgroundColor: '#FFFFFF',

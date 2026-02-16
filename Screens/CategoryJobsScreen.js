@@ -264,6 +264,7 @@ const styles = StyleSheet.create({
   },
   jobList: {
     flex: 1,
+    minHeight: 0,
   },
   jobCard: {
     backgroundColor: '#FFFFFF',

@@ -299,6 +299,7 @@ const styles = {
   },
   scrollView: {
     flex: 1,
+    minHeight: 0,
   },
   scrollContent: {
     padding: 16,

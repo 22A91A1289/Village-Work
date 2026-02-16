@@ -11,7 +11,7 @@ function WorkerTabNavigator() {
   
   return (
     <Tab.Navigator
-      sceneContainerStyle={{ flex: 1 }}
+      sceneContainerStyle={{ flex: 1, minHeight: 0 }}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ color, size }) => {

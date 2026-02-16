@@ -287,6 +287,7 @@ function createStyles(r) {
   },
   resultsContainer: {
     flex: 1,
+    minHeight: 0,
     paddingHorizontal: pad,
   },
   loadingContainer: {
