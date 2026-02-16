@@ -14,7 +14,7 @@ const LOCAL_IP = '192.168.31.14';
 
 // Default base URL:
 // - ENV override: EXPO_PUBLIC_API_BASE_URL
-// - Production build (APK): Render URL
+// - Production build (APK): Vercel URL
 // - Development: local IP (device) or localhost (simulator)
 export const API_BASE_URL =
   ENV_BASE_URL ||
