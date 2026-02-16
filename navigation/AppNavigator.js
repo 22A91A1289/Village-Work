@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { useAuth } from '../contexts/AuthContext';
 // Authentication Screens
 import LoginScreen from '../Screens/LoginScreen';
 import SignUpScreen from '../Screens/SignUpScreen';
@@ -61,40 +60,7 @@ const Stack = createStackNavigator();
 
 
 export default function AppNavigator() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const token = await AsyncStorage.getItem('authToken');
-      const user = await AsyncStorage.getItem('authUser');
-      
-      // If token and user exist, user is logged in
-      if (token && user) {
-        const userData = JSON.parse(user);
-        // Only auto-login for workers (employers should use web dashboard)
-        if (userData.role === 'worker' || !userData.role) {
-          setIsLoggedIn(true);
-        } else {
-          // Clear employer tokens from mobile app
-          await AsyncStorage.removeItem('authToken');
-          await AsyncStorage.removeItem('authUser');
-          setIsLoggedIn(false);
-        }
-      } else {
-        setIsLoggedIn(false);
-      }
-    } catch (error) {
-      console.error('Error checking auth status:', error);
-      setIsLoggedIn(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { isLoggedIn, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -105,20 +71,23 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <View style={styles.navWrapper}>
+      <NavigationContainer key={isLoggedIn ? 'main' : 'auth'}>
       <Stack.Navigator
+        key={isLoggedIn ? 'main' : 'auth'}
         initialRouteName={isLoggedIn ? "WorkerTabNavigator" : "LoginScreen"}
         screenOptions={{
           headerShown: false,
+          cardStyle: { flex: 1 },
         }}
       >
-        {/* Authentication Stack */}
+        {/* Auth screens - always available */}
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
         <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
         <Stack.Screen name="WorkPreferencesScreen" component={WorkPreferencesScreen} />
 
-        {/* Worker Main Stack - Mobile App is WORKER-ONLY */}
+        {/* Main app - only when logged in */}
         <Stack.Screen name="WorkerTabNavigator" component={WorkerTabNavigator} />
         <Stack.Screen name="JobDetailsScreen" component={JobDetailsScreen} />
         <Stack.Screen name="CategoryJobs" component={CategoryJobsScreen} />
@@ -140,6 +109,7 @@ export default function AppNavigator() {
         <Stack.Screen name="RatingScreen" component={RatingScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+    </View>
   );
 }
 
@@ -149,5 +119,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
+  },
+  navWrapper: {
+    flex: 1,
   },
 }); 

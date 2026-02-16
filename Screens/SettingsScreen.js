@@ -18,10 +18,14 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
+import { useConfirmModal } from '../contexts/ConfirmModalContext';
 import { getCurrentLocationAddress } from '../utils/locationHelper';
 
 const SettingsScreen = ({ navigation }) => {
   const { t, language, changeLanguage } = useLanguage();
+  const { logout } = useAuth();
+  const { showConfirm } = useConfirmModal();
   const [settings, setSettings] = useState({
     notifications: true,
     jobAlerts: true,
@@ -174,51 +178,39 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Confirm Logout',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem('authToken');
-              await AsyncStorage.removeItem('authUser');
-              await AsyncStorage.removeItem('userRole');
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'LoginScreen' }],
-              });
-            } catch (error) {
-              console.error('Error logging out:', error);
-              Alert.alert('Error', 'Failed to logout. Please try again.');
-            }
-          },
-        },
-      ]
-    );
+    showConfirm({
+      title: 'Confirm Logout',
+      message: 'Are you sure you want to sign out?',
+      confirmText: 'Sign Out',
+      cancelText: 'Cancel',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await logout();
+        } catch (error) {
+          console.error('Error logging out:', error);
+          Alert.alert('Error', 'Failed to logout. Please try again.');
+        }
+      },
+    });
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'Are you sure you want to delete your account? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert(
-              'Account Deletion',
-              'Please contact support to delete your account: support@worknex.com'
-            );
-          },
-        },
-      ]
-    );
+    showConfirm({
+      title: 'Delete Account',
+      message: 'Are you sure you want to delete your account? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      destructive: true,
+      onConfirm: () => {
+        showConfirm({
+          title: 'Account Deletion',
+          message: 'Please contact support to delete your account: support@worknex.com',
+          confirmText: 'OK',
+          cancelText: 'Close',
+        });
+      },
+    });
   };
 
   const handleClearCache = async () => {

@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../Screens/HomeScreen';
 import ProfileScreen from '../Screens/ProfileScreen';
 import { useLanguage } from '../contexts/LanguageContext';
-
 const Tab = createBottomTabNavigator();
 
 function WorkerTabNavigator() {
@@ -12,6 +11,7 @@ function WorkerTabNavigator() {
   
   return (
     <Tab.Navigator
+      sceneContainerStyle={{ flex: 1 }}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ color, size }) => {

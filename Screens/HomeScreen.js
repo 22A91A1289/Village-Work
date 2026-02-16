@@ -788,7 +788,7 @@
 // });
 
 // export default HomeScreen;
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ScrollView,
   View,
@@ -803,6 +803,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { useResponsive } from '../utils/responsive';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -850,6 +851,8 @@ const defaultTechnicalCategories = [
 
 const HomeScreen = ({ navigation }) => {
   const { t, language } = useLanguage();
+  const r = useResponsive();
+  const styles = useMemo(() => createStyles(r), [r.width, r.height]);
   const [searchText, setSearchText] = useState('');
   const [location, setLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
@@ -1369,7 +1372,7 @@ const HomeScreen = ({ navigation }) => {
       <ScrollView 
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
 
         {/* Daily Work Categories */}
@@ -1608,20 +1611,24 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(r) {
+  const pad = r.horizontalPadding;
+  const sp = r.spacing;
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
   scrollContent: {
-    paddingBottom: 20,
+    flexGrow: 1,
+    paddingBottom: sp.lg,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 15,
+    paddingHorizontal: pad,
+    paddingTop: r.isTablet ? 48 : 40,
+    paddingBottom: sp.md,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
@@ -1687,8 +1694,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   searchSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: pad,
+    paddingVertical: sp.md,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
@@ -1698,8 +1705,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F9FAFB',
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: sp.md,
+    paddingVertical: sp.md,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
@@ -1919,16 +1926,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    paddingHorizontal: pad,
+    marginBottom: sp.md,
     flexWrap: 'wrap',
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: r.rsf(18),
     fontWeight: '600',
     color: '#1F2937',
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    paddingHorizontal: pad,
+    marginBottom: sp.md,
   },
   sectionTitleMain: {
     fontSize: 18,
@@ -1941,11 +1948,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   categoriesContainer: {
-    paddingLeft: 20,
+    paddingLeft: pad,
   },
   categoryCard: {
-    width: 120,
-    height: 130,
+    width: r.rs(120),
+    height: r.rs(130),
     borderRadius: 18,
     padding: 16,
     marginRight: 16,
@@ -1990,8 +1997,8 @@ const styles = StyleSheet.create({
   jobCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    padding: 20,
-    marginHorizontal: 20,
+    padding: pad,
+    marginHorizontal: pad,
     marginBottom: 16,
     elevation: 3,
     shadowColor: '#000',
@@ -2202,9 +2209,9 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 40,
-    marginHorizontal: 20,
+    paddingVertical: sp.xl * 2,
+    paddingHorizontal: pad,
+    marginHorizontal: pad,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     marginBottom: 20,
@@ -2274,5 +2281,6 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 });
+}
 
 export default HomeScreen;

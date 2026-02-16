@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -15,8 +15,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, setAuth } from '../utils/api';
+import { useResponsive } from '../utils/responsive';
+import { useAuth } from '../contexts/AuthContext';
 
 const SignUpScreen = ({ navigation }) => {
+  const { login } = useAuth();
+  const r = useResponsive();
+  const styles = useMemo(() => createStyles(r), [r.width, r.height]);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -110,7 +115,8 @@ const SignUpScreen = ({ navigation }) => {
       await AsyncStorage.setItem('skillAssessmentCompleted', 'pending');
       await AsyncStorage.setItem('workPreferencesCompleted', 'true');
 
-      // Navigate directly to home
+      // Update auth state and navigate to home
+      login();
       navigation.reset({ 
         index: 0, 
         routes: [{ name: 'WorkerTabNavigator' }] 
@@ -132,7 +138,7 @@ const SignUpScreen = ({ navigation }) => {
       >
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
         >
           {/* Header */}
           <View style={styles.header}>
@@ -140,7 +146,7 @@ const SignUpScreen = ({ navigation }) => {
               style={styles.backButton}
               onPress={() => navigation.goBack()}
             >
-              <Ionicons name="arrow-back" size={24} color="#374151" />
+              <Ionicons name="arrow-back" size={r.rsf(24)} color="#374151" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Create Account</Text>
             <View style={{ width: 40 }} />
@@ -331,253 +337,171 @@ const SignUpScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 15,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  formContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
-  welcomeText: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitleText: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 4,
-  },
-  inputSubtext: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 8,
-  },
-  userTypeContainer: {
-    gap: 12,
-  },
-  userTypeButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  userTypeButtonActive: {
-    borderColor: '#4F46E5',
-    backgroundColor: '#4F46E5',
-  },
-  userTypeLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  userTypeLabelActive: {
-    color: '#FFFFFF',
-  },
-  userTypeDescription: {
-    fontSize: 12,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
-  userTypeDescriptionActive: {
-    color: '#E0E7FF',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  textInput: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  signUpButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4F46E5',
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  signUpButtonDisabled: {
-    backgroundColor: '#9CA3AF',
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  spinning: {
-    transform: [{ rotate: '360deg' }],
-  },
-  signUpButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  signInContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  signInText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  signInLink: {
-    fontSize: 14,
-    color: '#4F46E5',
-    fontWeight: '600',
-  },
-  pickerContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    padding: 12,
-    gap: 10,
-  },
-  pickerWrapper: {
-    flex: 1,
-    gap: 8,
-  },
-  pickerOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
-  },
-  pickerOptionSelected: {
-    borderColor: '#4F46E5',
-    backgroundColor: '#EEF2FF',
-  },
-  pickerOptionText: {
-    fontSize: 14,
-    color: '#374151',
-    fontWeight: '500',
-  },
-  pickerOptionTextSelected: {
-    color: '#4F46E5',
-    fontWeight: '600',
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 8,
-  },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
-    gap: 6,
-    position: 'relative',
-  },
-  categoryChipSelected: {
-    borderColor: '#4F46E5',
-    backgroundColor: '#EEF2FF',
-  },
-  categoryChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  categoryChipTextSelected: {
-    color: '#4F46E5',
-  },
-  categoryCheckBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#4F46E5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E5E7EB',
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    color: '#9CA3AF',
-    fontWeight: '500',
-  },
-});
+function createStyles(r) {
+  const pad = r.horizontalPadding;
+  const sp = r.spacing;
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#F8FAFC',
+    },
+    keyboardView: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: sp.xl,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: pad,
+      paddingTop: r.isTablet ? 48 : 40,
+      paddingBottom: sp.md,
+    },
+    backButton: {
+      padding: sp.sm,
+    },
+    headerTitle: {
+      fontSize: r.rsf(18),
+      fontWeight: '600',
+      color: '#1F2937',
+    },
+    formContainer: {
+      paddingHorizontal: pad,
+      paddingBottom: sp.xl,
+    },
+    welcomeText: {
+      fontSize: r.rsf(28),
+      fontWeight: '700',
+      color: '#1F2937',
+      marginBottom: sp.sm,
+      textAlign: 'center',
+    },
+    subtitleText: {
+      fontSize: r.rsf(16),
+      color: '#6B7280',
+      marginBottom: sp.xl,
+      textAlign: 'center',
+    },
+    inputGroup: {
+      marginBottom: sp.lg,
+    },
+    inputLabel: {
+      fontSize: r.rsf(16),
+      fontWeight: '500',
+      color: '#374151',
+      marginBottom: sp.xs,
+    },
+    inputSubtext: {
+      fontSize: r.rsf(14),
+      color: '#6B7280',
+      marginBottom: sp.sm,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: '#D1D5DB',
+      borderRadius: 12,
+      paddingHorizontal: sp.md,
+      paddingVertical: sp.md,
+    },
+    textInput: {
+      flex: 1,
+      marginLeft: sp.md,
+      fontSize: r.rsf(16),
+      color: '#1F2937',
+    },
+    eyeButton: {
+      padding: sp.xs,
+    },
+    signUpButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#4F46E5',
+      paddingVertical: sp.md,
+      borderRadius: 12,
+      marginTop: sp.sm,
+      marginBottom: sp.xl,
+    },
+    signUpButtonDisabled: {
+      backgroundColor: '#9CA3AF',
+    },
+    loadingContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    spinning: {
+      transform: [{ rotate: '360deg' }],
+    },
+    signUpButtonText: {
+      color: '#FFFFFF',
+      fontSize: r.rsf(16),
+      fontWeight: '600',
+      marginLeft: sp.sm,
+    },
+    signInContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    signInText: {
+      fontSize: r.rsf(14),
+      color: '#6B7280',
+    },
+    signInLink: {
+      fontSize: r.rsf(14),
+      color: '#4F46E5',
+      fontWeight: '600',
+    },
+    categoriesGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: sp.sm,
+      marginTop: sp.sm,
+    },
+    categoryChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: sp.md,
+      paddingVertical: sp.sm,
+      borderRadius: 20,
+      borderWidth: 2,
+      borderColor: '#E5E7EB',
+      backgroundColor: '#FFFFFF',
+      gap: sp.xs,
+      position: 'relative',
+    },
+    categoryChipSelected: {
+      borderColor: '#4F46E5',
+      backgroundColor: '#EEF2FF',
+    },
+    categoryChipText: {
+      fontSize: r.rsf(13),
+      fontWeight: '600',
+      color: '#374151',
+    },
+    categoryChipTextSelected: {
+      color: '#4F46E5',
+    },
+    categoryCheckBadge: {
+      position: 'absolute',
+      top: -4,
+      right: -4,
+      width: r.rs(18),
+      height: r.rs(18),
+      borderRadius: r.rs(9),
+      backgroundColor: '#4F46E5',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: '#FFFFFF',
+    },
+  });
+}
 
 export default SignUpScreen; 

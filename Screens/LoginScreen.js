@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   SafeAreaView,
   View,
@@ -15,8 +15,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, setAuth } from '../utils/api';
+import { useResponsive } from '../utils/responsive';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginScreen = ({ navigation }) => {
+  const { login } = useAuth();
+  const r = useResponsive();
+  const styles = useMemo(() => createStyles(r), [r.width, r.height]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -58,7 +63,8 @@ const LoginScreen = ({ navigation }) => {
         await AsyncStorage.setItem('skillAssessmentCompleted', 'pending');
       }
 
-      // Navigate to worker app - session persists until logout
+      // Update auth state and navigate to worker app
+      login();
       navigation.reset({ index: 0, routes: [{ name: 'WorkerTabNavigator' }] });
     } catch (err) {
       const message =
@@ -94,13 +100,13 @@ const LoginScreen = ({ navigation }) => {
       >
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
         >
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
               <View style={styles.logo}>
-                <Ionicons name="construct" size={40} color="#4F46E5" />
+                <Ionicons name="construct" size={r.rsf(40)} color="#4F46E5" />
               </View>
               <Text style={styles.brandTitle}>WORKNEX</Text>
               <Text style={styles.brandSubtitle}>STUDENT EMPLOYMENT PLATFORM</Text>
@@ -192,260 +198,158 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 20,
-  },
-  header: {
-    alignItems: 'center',
-    paddingTop: 40,
-    paddingBottom: 30,
-  },
-  backButton: {
-    position: 'absolute',
-    left: 20,
-    top: 40,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
-  },
-  backText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#374151',
-    fontWeight: '600',
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  brandTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  brandSubtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-  },
-  roleContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  roleTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 8,
-  },
-  roleSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 20,
-  },
-  roleButtons: {
-    gap: 12,
-  },
-  roleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-  },
-  roleButtonActive: {
-    borderColor: '#4F46E5',
-    backgroundColor: '#F8FAFC',
-  },
-  roleIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  roleContent: {
-    flex: 1,
-  },
-  roleButtonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 2,
-  },
-  roleButtonTitleActive: {
-    color: '#4F46E5',
-  },
-  roleButtonSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  roleButtonSubtitleActive: {
-    color: '#4F46E5',
-  },
-  formContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 8,
-  },
-  subtitleText: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginBottom: 24,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  textInput: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 24,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: '#4F46E5',
-    fontWeight: '500',
-  },
-  loginButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4F46E5',
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  loginButtonDisabled: {
-    backgroundColor: '#9CA3AF',
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  spinning: {
-    marginRight: 8,
-  },
-  loginButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E5E7EB',
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginBottom: 20,
-  },
-  googleButtonText: {
-    color: '#374151',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 8,
-  },
-  signUpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  signUpText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  signUpLink: {
-    fontSize: 14,
-    color: '#4F46E5',
-    fontWeight: '600',
-  },
-  demoContainer: {
-    backgroundColor: '#F3F4F6',
-    marginHorizontal: 20,
-    padding: 16,
-    borderRadius: 12,
-  },
-  demoTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  demoText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginBottom: 2,
-  },
-});
+function createStyles(r) {
+  const pad = r.horizontalPadding;
+  const sp = r.spacing;
+  const logoSize = r.rs(80);
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#F8FAFC',
+    },
+    keyboardView: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: sp.lg,
+    },
+    header: {
+      alignItems: 'center',
+      paddingTop: r.isTablet ? 48 : 40,
+      paddingBottom: sp.lg,
+    },
+    backButton: {
+      position: 'absolute',
+      left: pad,
+      top: r.isTablet ? 48 : 40,
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: sp.sm,
+      borderRadius: 12,
+      backgroundColor: '#F3F4F6',
+    },
+    backText: {
+      marginLeft: sp.sm,
+      fontSize: r.rsf(16),
+      color: '#374151',
+      fontWeight: '600',
+    },
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: sp.lg,
+    },
+    logo: {
+      width: logoSize,
+      height: logoSize,
+      borderRadius: logoSize / 2,
+      backgroundColor: '#F3F4F6',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: sp.md,
+    },
+    brandTitle: {
+      fontSize: r.rsf(28),
+      fontWeight: '700',
+      color: '#1F2937',
+      marginBottom: sp.xs,
+    },
+    brandSubtitle: {
+      fontSize: r.rsf(16),
+      color: '#6B7280',
+    },
+    formContainer: {
+      paddingHorizontal: pad,
+      marginBottom: sp.lg,
+    },
+    welcomeText: {
+      fontSize: r.rsf(24),
+      fontWeight: '700',
+      color: '#1F2937',
+      marginBottom: sp.sm,
+    },
+    subtitleText: {
+      fontSize: r.rsf(16),
+      color: '#6B7280',
+      marginBottom: sp.xl,
+    },
+    inputGroup: {
+      marginBottom: sp.lg,
+    },
+    inputLabel: {
+      fontSize: r.rsf(14),
+      fontWeight: '600',
+      color: '#374151',
+      marginBottom: sp.sm,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+      paddingHorizontal: sp.md,
+      paddingVertical: sp.md,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    },
+    textInput: {
+      flex: 1,
+      marginLeft: sp.md,
+      fontSize: r.rsf(16),
+      color: '#1F2937',
+    },
+    eyeButton: {
+      padding: sp.xs,
+    },
+    forgotPassword: {
+      alignSelf: 'flex-end',
+      marginBottom: sp.xl,
+    },
+    forgotPasswordText: {
+      fontSize: r.rsf(14),
+      color: '#4F46E5',
+      fontWeight: '500',
+    },
+    loginButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#4F46E5',
+      paddingVertical: sp.md,
+      borderRadius: 12,
+      marginBottom: sp.md,
+    },
+    loginButtonDisabled: {
+      backgroundColor: '#9CA3AF',
+    },
+    loadingContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    spinning: {
+      marginRight: sp.sm,
+    },
+    loginButtonText: {
+      color: '#FFFFFF',
+      fontSize: r.rsf(16),
+      fontWeight: '600',
+      marginLeft: sp.sm,
+    },
+    signUpContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    signUpText: {
+      fontSize: r.rsf(14),
+      color: '#6B7280',
+    },
+    signUpLink: {
+      fontSize: r.rsf(14),
+      color: '#4F46E5',
+      fontWeight: '600',
+    },
+  });
+}
 
 export default LoginScreen; 

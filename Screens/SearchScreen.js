@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useResponsive } from '../utils/responsive';
 
 const SearchScreen = ({ navigation, route }) => {
+  const r = useResponsive();
+  const styles = useMemo(() => createStyles(r), [r.width, r.height]);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -152,7 +155,7 @@ const SearchScreen = ({ navigation, route }) => {
       <ScrollView 
         style={styles.resultsContainer} 
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -230,20 +233,24 @@ const SearchScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(r) {
+  const pad = r.horizontalPadding;
+  const sp = r.spacing;
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
   scrollContent: {
-    paddingBottom: 20,
+    flexGrow: 1,
+    paddingBottom: sp.lg,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 16,
+    paddingHorizontal: pad,
+    paddingTop: r.isTablet ? 48 : 40,
+    paddingBottom: sp.md,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
@@ -264,10 +271,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    marginHorizontal: 20,
-    marginVertical: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    marginHorizontal: pad,
+    marginVertical: sp.md,
+    paddingHorizontal: sp.md,
+    paddingVertical: sp.md,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
@@ -280,7 +287,7 @@ const styles = StyleSheet.create({
   },
   resultsContainer: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: pad,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -395,5 +402,6 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 });
+}
 
 export default SearchScreen; 

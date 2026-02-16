@@ -18,9 +18,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
+import { useConfirmModal } from '../contexts/ConfirmModalContext';
 
 const ProfileScreen = ({ navigation }) => {
   const { t, language, changeLanguage } = useLanguage();
+  const { logout } = useAuth();
+  const { showConfirm } = useConfirmModal();
   const [isOnline, setIsOnline] = useState(true);
   const [availableForWork, setAvailableForWork] = useState(true);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -97,35 +101,22 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Confirm Logout',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Sign Out',
-          style: 'destructive', 
-          onPress: async () => {
-            try {
-              // Clear all auth data
-              await AsyncStorage.removeItem('authToken');
-              await AsyncStorage.removeItem('authUser');
-              await AsyncStorage.removeItem('userRole');
-              
-              // Navigate to login screen
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'LoginScreen' }],
-              });
-            } catch (error) {
-              console.error('Logout error:', error);
-              Alert.alert('Error', 'Failed to logout. Please try again.');
-            }
-          },
-        },
-      ]
-    );
+  const handleLogout = () => {
+    showConfirm({
+      title: 'Confirm Logout',
+      message: 'Are you sure you want to sign out?',
+      confirmText: 'Sign Out',
+      cancelText: 'Cancel',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await logout();
+        } catch (error) {
+          console.error('Logout error:', error);
+          Alert.alert('Error', 'Failed to logout. Please try again.');
+        }
+      },
+    });
   };
 
   const handleProfilePictureChange = () => {
