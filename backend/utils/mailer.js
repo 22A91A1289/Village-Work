@@ -5,12 +5,18 @@ const {
   SMTP_PORT,
   SMTP_USER,
   SMTP_PASS,
-  SMTP_FROM
+  SMTP_FROM,
+  RESEND_API_KEY,
+  RESEND_FROM
 } = process.env;
+
+const https = require('https');
 
 /** Returns true if email can be sent (SMTP configured). */
 function isEmailConfigured() {
-  return !!(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM);
+  const smtpConfigured = !!(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM);
+  const resendConfigured = !!(RESEND_API_KEY && (RESEND_FROM || SMTP_FROM));
+  return smtpConfigured || resendConfigured;
 }
 
 function ensureEmailConfig() {
@@ -21,8 +27,11 @@ function ensureEmailConfig() {
   console.log('  SMTP_PASS:', SMTP_PASS ? '✅ Present' : '❌ Missing');
   console.log('  SMTP_FROM:', SMTP_FROM || '❌ Missing');
 
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
-    throw new Error('Email service not configured. Set SMTP_* vars in .env');
+  const hasSmtp = SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM;
+  const hasResend = RESEND_API_KEY && (RESEND_FROM || SMTP_FROM);
+
+  if (!hasSmtp && !hasResend) {
+    throw new Error('Email service not configured. Set SMTP_* or RESEND_* vars in .env');
   }
   // Gmail App Password is 16 chars; if SMTP_PASS has spaces, use quotes in .env: SMTP_PASS="xxxx xxxx xxxx xxxx"
   const passLen = (SMTP_PASS || '').replace(/\s/g, '').length;
@@ -31,7 +40,7 @@ function ensureEmailConfig() {
   }
 }
 
-/** OTP email HTML (shared by Resend and SMTP). */
+/** OTP email HTML for nodemailer. */
 function getOtpEmailContent(otp) {
   const text = `Your WorkNex password reset OTP is ${otp}. It expires in 10 minutes.`;
   const html = `
@@ -90,82 +99,98 @@ function createTransport() {
   return nodemailer.createTransport(config);
 }
 
+async function sendViaResend({ to, subject, html, text }) {
+  return new Promise((resolve, reject) => {
+    const from = RESEND_FROM || SMTP_FROM;
+    const body = JSON.stringify({
+      from: from,
+      to: [to],
+      subject: subject,
+      html: html,
+      text: text
+    });
+
+    const options = {
+      hostname: 'api.resend.com',
+      port: 443,
+      path: '/emails',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${RESEND_API_KEY.trim()}`
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => data += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(JSON.parse(data));
+        } else {
+          reject(new Error(`Resend API error: ${res.statusCode} - ${data}`));
+        }
+      });
+    });
+
+    req.on('error', (e) => reject(e));
+    req.write(body);
+    req.end();
+  });
+}
+
 async function sendOtpEmail({ to, otp }) {
   try {
     console.log('📧 Preparing to send OTP email...');
     console.log('  To:', to);
-    console.log('  OTP:', otp);
 
-    // Skip actual send when testing (e.g. Thunder Client) - set SKIP_EMAIL_SEND=1 in .env
+    // Skip actual send when testing
     const skipEnv = (process.env.SKIP_EMAIL_SEND || '').toString().trim().toLowerCase();
-    const skipSend = skipEnv === '1' || skipEnv === 'true' || skipEnv === 'yes';
-    if (skipSend) {
+    if (skipEnv === '1' || skipEnv === 'true' || skipEnv === 'yes') {
       console.log('⏭️ SKIP_EMAIL_SEND is set – not sending email. OTP for', to, ':', otp);
-      return { messageId: 'skip-' + Date.now(), response: 'Skipped for testing' };
+      return { messageId: 'skip-' + Date.now() };
     }
 
-    const transporter = createTransport();
-    
-    // Remove any quotes from SMTP_FROM
-    const cleanFrom = SMTP_FROM.replace(/["']/g, '').trim();
-    
     const subject = 'WorkNex Password Reset OTP';
     const { text, html } = getOtpEmailContent(otp);
 
-    console.log('📧 Sending email from:', cleanFrom);
-    console.log('📧 Sending email to:', to);
-    
-    const sendWithRetry = async (attempt = 1) => {
-      const maxAttempts = 2;
+    // Prefer Resend on Render/Vercel as it works via HTTP
+    if (RESEND_API_KEY) {
+      console.log('📧 Sending via Resend API...');
       try {
-        return await transporter.sendMail({
-          from: cleanFrom,
-          to,
-          subject,
-          text,
-          html
-        });
+        const info = await sendViaResend({ to, subject, html, text });
+        console.log('✅ Email sent via Resend:', info.id);
+        return info;
       } catch (err) {
-        const isTimeout = err.code === 'ETIMEDOUT' || err.code === 'ESOCKET' || /timeout/i.test(err.message || '');
-        if (isTimeout && attempt < maxAttempts) {
-          console.log(`📧 Send attempt ${attempt} timed out, retrying (${attempt + 1}/${maxAttempts})...`);
-          return sendWithRetry(attempt + 1);
-        }
-        throw err;
+        console.error('⚠️ Resend failed, falling back to SMTP if possible:', err.message);
+        if (!isSMTPConfigured()) throw err;
       }
-    };
+    }
 
-    const info = await sendWithRetry();
-
-    console.log('✅ Email sent successfully!');
-    console.log('  Message ID:', info.messageId);
-    console.log('  Response:', info.response);
+    // Fallback to SMTP
+    const transporter = createTransport();
+    const cleanFrom = SMTP_FROM.replace(/["']/g, '').trim();
     
+    console.log('📧 Sending via SMTP...');
+    const info = await transporter.sendMail({
+      from: cleanFrom,
+      to,
+      subject,
+      text,
+      html
+    });
+
+    console.log('✅ Email sent via SMTP:', info.messageId);
     return info;
 
   } catch (error) {
-    console.error('❌ Email sending error:', error);
-    console.error('  Error name:', error.name);
-    console.error('  Error message:', error.message);
-    console.error('  Error code:', error.code);
-    
-    if (error.code === 'EAUTH') {
-      console.error('\n🚨 AUTHENTICATION FAILED:');
-      console.error('  - Check if SMTP_USER is correct:', SMTP_USER);
-      console.error('  - Check if SMTP_PASS (App Password) is correct');
-      console.error('  - For Gmail, enable 2FA and create App Password at: https://myaccount.google.com/apppasswords');
-      console.error('  - App Password format: "xxxx xxxx xxxx xxxx" (4 groups of 4)');
-    } else if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
-      console.error('\n🚨 CONNECTION FAILED:');
-      console.error('  - Check SMTP_HOST:', SMTP_HOST, 'SMTP_PORT:', SMTP_PORT);
-    } else if (error.responseCode === 550 || error.responseCode === 554) {
-      console.error('\n🚨 EMAIL REJECTED:');
-      console.error('  - Recipient email might be invalid');
-      console.error('  - Check spam/junk folder');
-    }
-    
+    console.error('❌ Email sending error:', error.message);
     throw new Error(`Failed to send email: ${error.message}`);
   }
+}
+
+function isSMTPConfigured() {
+  return !!(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM);
 }
 
 module.exports = { sendOtpEmail, isEmailConfigured };

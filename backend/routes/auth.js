@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { sendOtpEmail, isEmailConfigured } = require('../utils/mailer');
+const { isValidEmail, normalizeEmail } = require('../utils/validation');
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
@@ -28,7 +29,11 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Please provide all required fields' });
     }
     
-    const emailNorm = (typeof email === 'string' ? email : '').trim().toLowerCase();
+    const emailNorm = normalizeEmail(email);
+    
+    if (!isValidEmail(emailNorm)) {
+      return res.status(400).json({ error: 'Please provide a valid email address' });
+    }
     
     // Check if user already exists
     const existingUser = await User.findOne({ email: emailNorm });
@@ -124,8 +129,12 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Please provide email and password' });
     }
     
-    // Normalize email (backend stores lowercase)
-    const emailNorm = (typeof email === 'string' ? email : '').trim().toLowerCase();
+    // Normalize email
+    const emailNorm = normalizeEmail(email);
+    
+    if (!isValidEmail(emailNorm)) {
+      return res.status(400).json({ error: 'Please provide a valid email address' });
+    }
     
     // Find user
     const user = await User.findOne({ email: emailNorm });
@@ -174,11 +183,12 @@ const forgotPasswordHandler = async (req, res) => {
 
     console.log('🔑 Forgot password request for email:', email);
 
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: 'Valid email is required' });
     }
 
-    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    const emailNorm = normalizeEmail(email);
+    const user = await User.findOne({ email: emailNorm });
 
     // Always respond success to avoid email enumeration
     if (!user) {
@@ -211,20 +221,18 @@ const forgotPasswordHandler = async (req, res) => {
       });
     }
 
-    // Respond immediately so the client never hits "email taking too long"
-    res.json({ success: true, message: 'If an account exists, OTP was sent to email. Check your inbox (and spam).' });
-
-    // Send OTP email in background – don't block the response
+    // Send OTP email - Await this so serverless functions (Vercel/Render) don't kill the process
     const recipientEmail = user.email;
-    console.log('📧 Sending OTP email in background to:', recipientEmail);
-    sendOtpEmail({ to: recipientEmail, otp })
-      .then(() => console.log('✅ OTP email sent successfully to:', recipientEmail))
-      .catch((err) => {
-        console.error('❌ OTP EMAIL NOT SENT – user will not receive OTP.');
-        console.error('   To:', recipientEmail);
-        console.error('   Error:', err.message);
-        console.error('   On Render: set Environment Variables: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM. Gmail: use App Password.');
-      });
+    console.log('📧 Sending OTP email to:', recipientEmail);
+    
+    try {
+      await sendOtpEmail({ to: recipientEmail, otp });
+      console.log('✅ OTP email sent successfully to:', recipientEmail);
+    } catch (err) {
+      console.error('❌ OTP EMAIL NOT SENT:', err.message);
+    }
+
+    res.json({ success: true, message: 'If an account exists, OTP was sent to email. Check your inbox (and spam).' });
   } catch (error) {
     console.error('❌ Forgot password error:', error);
     console.error('Error details:', {
@@ -253,7 +261,8 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    const emailNorm = normalizeEmail(email);
+    const user = await User.findOne({ email: emailNorm });
     if (!user || !user.resetOtpHash || !user.resetOtpExpires) {
       return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
@@ -303,8 +312,10 @@ router.post('/google-login', async (req, res) => {
       return res.status(400).json({ message: 'Google ID and email are required' });
     }
 
+    const emailNorm = normalizeEmail(email);
+
     // Check if user exists
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email: emailNorm });
 
     if (!user) {
       return res.status(404).json({ 
@@ -359,8 +370,10 @@ router.post('/google-signup', async (req, res) => {
       return res.status(400).json({ message: 'Google ID, email, and name are required' });
     }
 
+    const emailNorm = normalizeEmail(email);
+
     // Check if user already exists
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email: emailNorm });
 
     if (user) {
       // User exists - update Google ID and log them in
@@ -397,7 +410,7 @@ router.post('/google-signup', async (req, res) => {
     // Create new user
     user = new User({
       name,
-      email,
+      email: emailNorm,
       googleId,
       password: Math.random().toString(36).slice(-12), // Random password (won't be used)
       role: role || 'worker',
