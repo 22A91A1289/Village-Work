@@ -520,22 +520,481 @@
 //   return questions;
 // };
 
-import { generateNLPQuestions } from './nlpQuestionGenerator';
+// import { generateNLPQuestions } from './nlpQuestionGenerator';
 
-/**
- * Generate quiz questions (Attempt Aware)
- */
-export const generateQuizQuestions = async (
+// /**
+//  * Generate quiz questions (Attempt Aware)
+//  */
+// export const generateQuizQuestions = async (
+//   category,
+//   numQuestions = 5,
+//   language = 'en',
+//   attemptNumber = 0
+// ) => {
+
+//   try {
+
+//     console.log(`🧠 Generating NLP questions for ${category}`);
+//     console.log(`🔁 Attempt Number: ${attemptNumber}`);
+
+//     const questions = await generateNLPQuestions(
+//       category,
+//       numQuestions,
+//       attemptNumber
+//     );
+
+//     if (questions && questions.length > 0) {
+//       return questions;
+//     }
+
+//     return null;
+
+//   } catch (error) {
+//     console.error('Quiz Generation Error:', error);
+//     return null;
+//   }
+// };
+
+
+// /**
+//  * Fallback questions (5 per category)
+//  */
+// export const getFallbackQuestions = (categoryName) => {
+
+//   const fallback = {
+
+//     Electrician: [
+//       {
+//         question: 'What is standard voltage in India?',
+//         options: ['110V', '220V', '440V', '380V'],
+//         correctAnswer: 1,
+//         explanation: 'India uses 220V.'
+//       },
+//       {
+//         question: 'What color is earth wire?',
+//         options: ['Red', 'Black', 'Green/Yellow', 'Blue'],
+//         correctAnswer: 2,
+//         explanation: 'Green/Yellow is earth.'
+//       },
+//       {
+//         question: 'MCB protects from?',
+//         options: ['Overload', 'Low current', 'Loose wire', 'Heat'],
+//         correctAnswer: 0,
+//         explanation: 'MCB protects from overload.'
+//       },
+//       {
+//         question: 'Before wiring work you must?',
+//         options: ['Turn off power', 'Test only', 'Wear shoes', 'Call friend'],
+//         correctAnswer: 0,
+//         explanation: 'Switch off power.'
+//       },
+//       {
+//         question: 'Tool to test voltage?',
+//         options: ['Hammer', 'Tester', 'Spanner', 'Knife'],
+//         correctAnswer: 1,
+//         explanation: 'Tester checks voltage.'
+//       }
+//     ],
+
+//     'Data Entry': [
+//       {
+//         question: 'Shortcut to save file?',
+//         options: ['Ctrl+P', 'Ctrl+S', 'Ctrl+A', 'Ctrl+V'],
+//         correctAnswer: 1,
+//         explanation: 'Ctrl+S saves.'
+//       },
+//       {
+//         question: 'SUM function does?',
+//         options: ['Add', 'Multiply', 'Divide', 'Subtract'],
+//         correctAnswer: 0,
+//         explanation: 'SUM adds numbers.'
+//       },
+//       {
+//         question: 'Ctrl+C does?',
+//         options: ['Cut', 'Copy', 'Paste', 'Delete'],
+//         correctAnswer: 1,
+//         explanation: 'Copies.'
+//       },
+//       {
+//         question: 'Undo shortcut?',
+//         options: ['Ctrl+Y', 'Ctrl+Z', 'Ctrl+X', 'Ctrl+U'],
+//         correctAnswer: 1,
+//         explanation: 'Ctrl+Z.'
+//       },
+//       {
+//         question: 'Formula starts with?',
+//         options: ['=', '+', '-', '*'],
+//         correctAnswer: 0,
+//         explanation: 'Starts with =.'
+//       }
+//     ],
+
+//     Mechanic: [
+//       {
+//         question: 'Standard tire pressure?',
+//         options: ['20-25 PSI', '30-35 PSI', '40-45 PSI', '50 PSI'],
+//         correctAnswer: 1,
+//         explanation: '30-35 PSI is standard.'
+//       },
+//       {
+//         question: 'Tool to remove spark plugs?',
+//         options: ['Wrench', 'Socket', 'Hammer', 'Screwdriver'],
+//         correctAnswer: 1,
+//         explanation: 'Socket removes spark plugs.'
+//       },
+//       {
+//         question: 'What cools engine?',
+//         options: ['Radiator', 'Battery', 'Fuel pump', 'Gear box'],
+//         correctAnswer: 0,
+//         explanation: 'Radiator cools engine.'
+//       },
+//       {
+//         question: 'What lubricates engine?',
+//         options: ['Water', 'Oil', 'Fuel', 'Coolant'],
+//         correctAnswer: 1,
+//         explanation: 'Oil lubricates engine.'
+//       },
+//       {
+//         question: 'What charges battery?',
+//         options: ['Radiator', 'Alternator', 'Starter', 'Pump'],
+//         correctAnswer: 1,
+//         explanation: 'Alternator charges battery.'
+//       }
+//     ],
+
+//     Plumber: [
+//       {
+//         question: 'Standard main pipe size?',
+//         options: ['1/2 inch', '3/4 inch', '1 inch', '2 inch'],
+//         correctAnswer: 1,
+//         explanation: '3/4 inch is standard.'
+//       },
+//       {
+//         question: 'Material for hot water pipes?',
+//         options: ['PVC', 'CPVC', 'Iron', 'Copper'],
+//         correctAnswer: 1,
+//         explanation: 'CPVC is used.'
+//       },
+//       {
+//         question: 'Tool to cut PVC?',
+//         options: ['Pipe cutter', 'Hammer', 'Knife', 'Wrench'],
+//         correctAnswer: 0,
+//         explanation: 'Pipe cutter cuts PVC.'
+//       },
+//       {
+//         question: 'What prevents sewer gas?',
+//         options: ['Valve', 'Trap', 'Pump', 'Filter'],
+//         correctAnswer: 1,
+//         explanation: 'Trap prevents sewer gas.'
+//       },
+//       {
+//         question: 'Water hammer caused by?',
+//         options: ['Low pressure', 'Sudden valve closure', 'Leak', 'Heat'],
+//         correctAnswer: 1,
+//         explanation: 'Sudden closure causes hammer.'
+//       }
+//     ],
+//     Carpenter: [
+//   {
+//     question: 'What is standard plywood thickness?',
+//     options: ['6mm', '12mm', '18mm', 'All of the above'],
+//     correctAnswer: 3,
+//     explanation: 'Plywood comes in multiple thicknesses.'
+//   },
+//   {
+//     question: 'Which tool cuts curves?',
+//     options: ['Handsaw', 'Jigsaw', 'Hammer', 'Chisel'],
+//     correctAnswer: 1,
+//     explanation: 'Jigsaw cuts curves.'
+//   },
+//   {
+//     question: 'What is wood seasoning?',
+//     options: ['Painting', 'Removing moisture', 'Cutting', 'Polishing'],
+//     correctAnswer: 1,
+//     explanation: 'Seasoning removes moisture.'
+//   },
+//   {
+//     question: 'Strongest wood joint?',
+//     options: ['Butt joint', 'Dovetail joint', 'Glue joint', 'Nail joint'],
+//     correctAnswer: 1,
+//     explanation: 'Dovetail joint is strongest.'
+//   },
+//   {
+//     question: 'Tool for accurate measurement?',
+//     options: ['Hammer', 'Saw', 'Measuring tape', 'Knife'],
+//     correctAnswer: 2,
+//     explanation: 'Measuring tape ensures accuracy.'
+//   }
+// ],
+
+//   };
+
+//   const normalizedCategory = categoryName?.trim().toLowerCase();
+
+//   const matchedKey = Object.keys(fallback).find(
+//     key => key.toLowerCase() === normalizedCategory
+//   );
+
+//   return matchedKey ? fallback[matchedKey] : [];
+// };
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+/* =========================================
+   DYNAMIC KNOWLEDGE BASE
+=========================================*/
+
+class DynamicKnowledgeBase {
+  constructor() {
+    this.knowledge = {
+
+      'Data Entry': [
+        { type: 'shortcut', action: 'Save file', key: 'Ctrl+S' },
+        { type: 'shortcut', action: 'Copy', key: 'Ctrl+C' },
+        { type: 'shortcut', action: 'Paste', key: 'Ctrl+V' },
+        { type: 'shortcut', action: 'Undo last action', key: 'Ctrl+Z' },
+        { type: 'formula', concept: 'Average', formula: '=AVERAGE()' },
+        { type: 'formula', concept: 'Sum', formula: '=SUM()' }
+      ],
+
+      Electrician: [
+        { type: 'voltage', value: '220V' },
+        { type: 'wire', purpose: 'Earth connection', color: 'Green/Yellow' },
+        { type: 'device', name: 'MCB', purpose: 'Protecting circuit from overload' },
+        { type: 'tool', purpose: 'Test voltage', name: 'Tester' },
+        { type: 'safety', rule: 'Turn off main power before working' }
+      ],
+
+      Mechanic: [
+        { type: 'pressure', value: '30-35 PSI' },
+        { type: 'tool', purpose: 'Remove spark plugs', name: 'Spark plug socket' },
+        { type: 'component', name: 'Radiator', purpose: 'Cool engine' },
+        { type: 'component', name: 'Alternator', purpose: 'Charge battery' },
+        { type: 'fluid', name: 'Engine oil', purpose: 'Lubricate moving parts' }
+      ],
+
+      Plumber: [
+        { type: 'pipe', size: '3/4 inch' },
+        { type: 'material', name: 'CPVC', purpose: 'Hot water pipes' },
+        { type: 'tool', purpose: 'Cut PVC pipes', name: 'Pipe cutter' },
+        { type: 'device', name: 'Trap', purpose: 'Prevent sewer gas' },
+        { type: 'issue', cause: 'Sudden valve closure', problem: 'Water hammer' }
+      ],
+
+      Carpenter: [
+        { type: 'tool', purpose: 'Cut wood in straight lines', name: 'Handsaw' },
+        { type: 'tool', purpose: 'Cut curves in wood', name: 'Jigsaw' },
+        { type: 'tool', purpose: 'Measure wood accurately', name: 'Measuring tape' },
+        { type: 'component', name: 'Dovetail joint', purpose: 'Strong wood joint connection' },
+        { type: 'safety', rule: 'Wear safety goggles while cutting wood' }
+      ],
+    };
+  }
+
+  getFacts(category) {
+    if (!category) return [];
+
+    const normalized = category.trim().toLowerCase();
+
+    const matchedKey = Object.keys(this.knowledge).find(
+      key => key.toLowerCase() === normalized
+    );
+
+    return matchedKey ? this.knowledge[matchedKey] : [];
+  }
+}
+
+/* =========================================
+   TEMPLATE ENGINE
+=========================================*/
+
+class TemplateEngine {
+
+  static generateQuestion(fact, category) {
+
+    switch (fact.type) {
+
+      case 'shortcut':
+        return {
+          question: `Which key is used to ${fact.action}?`,
+          correctAnswer: fact.key,
+          explanation: `${fact.key} is used to ${fact.action}.`
+        };
+
+      case 'formula':
+        return {
+          question: `Which formula calculates ${fact.concept}?`,
+          correctAnswer: fact.formula,
+          explanation: `${fact.formula} calculates ${fact.concept}.`
+        };
+
+      case 'voltage':
+        return {
+          question: 'What is the standard household voltage in India?',
+          correctAnswer: fact.value,
+          explanation: `${fact.value} is standard voltage.`
+        };
+
+      case 'wire':
+        return {
+          question: `Which color wire is used for ${fact.purpose}?`,
+          correctAnswer: fact.color,
+          explanation: `${fact.color} is used for ${fact.purpose}.`
+        };
+
+      case 'device':
+        return {
+          question: `What is ${fact.name} used for?`,
+          correctAnswer: fact.purpose,
+          explanation: `${fact.name} is used for ${fact.purpose}.`
+        };
+
+      case 'tool':
+        return {
+          question: `Which tool is used to ${fact.purpose}?`,
+          correctAnswer: fact.name,
+          explanation: `${fact.name} is used to ${fact.purpose}.`
+        };
+
+      case 'safety':
+        return {
+          question: `What is an important safety rule in ${category}?`,
+          correctAnswer: fact.rule,
+          explanation: fact.rule
+        };
+
+      case 'component':
+      case 'fluid':
+        return {
+          question: `What is the function of ${fact.name}?`,
+          correctAnswer: fact.purpose,
+          explanation: `${fact.name} is used to ${fact.purpose}.`
+        };
+
+      case 'pipe':
+        return {
+          question: 'What is the standard pipe size for main water supply?',
+          correctAnswer: fact.size,
+          explanation: `${fact.size} is standard size.`
+        };
+
+      case 'material':
+        return {
+          question: `Which material is used for ${fact.purpose}?`,
+          correctAnswer: fact.name,
+          explanation: `${fact.name} is used for ${fact.purpose}.`
+        };
+
+      case 'issue':
+        return {
+          question: `What causes ${fact.problem}?`,
+          correctAnswer: fact.cause,
+          explanation: `${fact.cause} causes ${fact.problem}.`
+        };
+
+      default:
+        return null;
+    }
+  }
+}
+
+/* =========================================
+   DISTRACTOR ENGINE
+=========================================*/
+
+class DistractorEngine {
+
+  static generateOptions(correctAnswer) {
+
+    const pool = [
+      'Ctrl+P', 'Ctrl+A', 'Ctrl+X',
+      '=SUM()', '=COUNT()',
+      '110V', '440V',
+      'Red', 'Blue',
+      'Hammer', 'Wrench',
+      'PVC', 'Copper',
+      'Radiator', 'Battery',
+      'Trap', '1/2 inch'
+    ];
+
+    const distractors = pool
+      .filter(opt => opt !== correctAnswer)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3);
+
+    return [correctAnswer, ...distractors]
+      .sort(() => 0.5 - Math.random());
+  }
+}
+
+/* =========================================
+   MAIN NLP GENERATOR
+=========================================*/
+
+export const generateNLPQuestions = async (
   category,
   numQuestions = 5,
-  language = 'en',
   attemptNumber = 0
 ) => {
 
   try {
 
-    console.log(`🧠 Generating NLP questions for ${category}`);
-    console.log(`🔁 Attempt Number: ${attemptNumber}`);
+    const knowledgeBase = new DynamicKnowledgeBase();
+    const facts = knowledgeBase.getFacts(category);
+
+    if (!facts.length) return null;
+
+    const setIndex = Number(attemptNumber) % 3;
+
+    let selectedFacts;
+
+    if (setIndex === 0) {
+      selectedFacts = [...facts];
+    } 
+    else if (setIndex === 1) {
+      selectedFacts = [...facts].reverse();
+    } 
+    else {
+      selectedFacts = [...facts].sort(() => Math.random() - 0.5);
+    }
+
+    const generated = [];
+
+    for (let i = 0; i < numQuestions; i++) {
+
+      const fact = selectedFacts[i % selectedFacts.length];
+      const base = TemplateEngine.generateQuestion(fact, category);
+      if (!base) continue;
+
+      const options = DistractorEngine.generateOptions(base.correctAnswer);
+      const correctIndex = options.indexOf(base.correctAnswer);
+
+      generated.push({
+        question: base.question,
+        options,
+        correctAnswer: correctIndex,
+        explanation: base.explanation
+      });
+    }
+
+    return generated;
+
+  } catch (error) {
+    console.error("Dynamic NLP Error:", error);
+    return null;
+  }
+};
+
+/* =========================================
+   WRAPPER FUNCTION (IMPORTANT FIX)
+=========================================*/
+
+export const generateQuizQuestions = async (
+  category,
+  numQuestions = 5,
+  attemptNumber = 0
+) => {
+
+  try {
 
     const questions = await generateNLPQuestions(
       category,
@@ -553,187 +1012,4 @@ export const generateQuizQuestions = async (
     console.error('Quiz Generation Error:', error);
     return null;
   }
-};
-
-
-/**
- * Fallback questions (5 per category)
- */
-export const getFallbackQuestions = (categoryName) => {
-
-  const fallback = {
-
-    Electrician: [
-      {
-        question: 'What is standard voltage in India?',
-        options: ['110V', '220V', '440V', '380V'],
-        correctAnswer: 1,
-        explanation: 'India uses 220V.'
-      },
-      {
-        question: 'What color is earth wire?',
-        options: ['Red', 'Black', 'Green/Yellow', 'Blue'],
-        correctAnswer: 2,
-        explanation: 'Green/Yellow is earth.'
-      },
-      {
-        question: 'MCB protects from?',
-        options: ['Overload', 'Low current', 'Loose wire', 'Heat'],
-        correctAnswer: 0,
-        explanation: 'MCB protects from overload.'
-      },
-      {
-        question: 'Before wiring work you must?',
-        options: ['Turn off power', 'Test only', 'Wear shoes', 'Call friend'],
-        correctAnswer: 0,
-        explanation: 'Switch off power.'
-      },
-      {
-        question: 'Tool to test voltage?',
-        options: ['Hammer', 'Tester', 'Spanner', 'Knife'],
-        correctAnswer: 1,
-        explanation: 'Tester checks voltage.'
-      }
-    ],
-
-    'Data Entry': [
-      {
-        question: 'Shortcut to save file?',
-        options: ['Ctrl+P', 'Ctrl+S', 'Ctrl+A', 'Ctrl+V'],
-        correctAnswer: 1,
-        explanation: 'Ctrl+S saves.'
-      },
-      {
-        question: 'SUM function does?',
-        options: ['Add', 'Multiply', 'Divide', 'Subtract'],
-        correctAnswer: 0,
-        explanation: 'SUM adds numbers.'
-      },
-      {
-        question: 'Ctrl+C does?',
-        options: ['Cut', 'Copy', 'Paste', 'Delete'],
-        correctAnswer: 1,
-        explanation: 'Copies.'
-      },
-      {
-        question: 'Undo shortcut?',
-        options: ['Ctrl+Y', 'Ctrl+Z', 'Ctrl+X', 'Ctrl+U'],
-        correctAnswer: 1,
-        explanation: 'Ctrl+Z.'
-      },
-      {
-        question: 'Formula starts with?',
-        options: ['=', '+', '-', '*'],
-        correctAnswer: 0,
-        explanation: 'Starts with =.'
-      }
-    ],
-
-    Mechanic: [
-      {
-        question: 'Standard tire pressure?',
-        options: ['20-25 PSI', '30-35 PSI', '40-45 PSI', '50 PSI'],
-        correctAnswer: 1,
-        explanation: '30-35 PSI is standard.'
-      },
-      {
-        question: 'Tool to remove spark plugs?',
-        options: ['Wrench', 'Socket', 'Hammer', 'Screwdriver'],
-        correctAnswer: 1,
-        explanation: 'Socket removes spark plugs.'
-      },
-      {
-        question: 'What cools engine?',
-        options: ['Radiator', 'Battery', 'Fuel pump', 'Gear box'],
-        correctAnswer: 0,
-        explanation: 'Radiator cools engine.'
-      },
-      {
-        question: 'What lubricates engine?',
-        options: ['Water', 'Oil', 'Fuel', 'Coolant'],
-        correctAnswer: 1,
-        explanation: 'Oil lubricates engine.'
-      },
-      {
-        question: 'What charges battery?',
-        options: ['Radiator', 'Alternator', 'Starter', 'Pump'],
-        correctAnswer: 1,
-        explanation: 'Alternator charges battery.'
-      }
-    ],
-
-    Plumber: [
-      {
-        question: 'Standard main pipe size?',
-        options: ['1/2 inch', '3/4 inch', '1 inch', '2 inch'],
-        correctAnswer: 1,
-        explanation: '3/4 inch is standard.'
-      },
-      {
-        question: 'Material for hot water pipes?',
-        options: ['PVC', 'CPVC', 'Iron', 'Copper'],
-        correctAnswer: 1,
-        explanation: 'CPVC is used.'
-      },
-      {
-        question: 'Tool to cut PVC?',
-        options: ['Pipe cutter', 'Hammer', 'Knife', 'Wrench'],
-        correctAnswer: 0,
-        explanation: 'Pipe cutter cuts PVC.'
-      },
-      {
-        question: 'What prevents sewer gas?',
-        options: ['Valve', 'Trap', 'Pump', 'Filter'],
-        correctAnswer: 1,
-        explanation: 'Trap prevents sewer gas.'
-      },
-      {
-        question: 'Water hammer caused by?',
-        options: ['Low pressure', 'Sudden valve closure', 'Leak', 'Heat'],
-        correctAnswer: 1,
-        explanation: 'Sudden closure causes hammer.'
-      }
-    ],
-    Carpenter: [
-  {
-    question: 'What is standard plywood thickness?',
-    options: ['6mm', '12mm', '18mm', 'All of the above'],
-    correctAnswer: 3,
-    explanation: 'Plywood comes in multiple thicknesses.'
-  },
-  {
-    question: 'Which tool cuts curves?',
-    options: ['Handsaw', 'Jigsaw', 'Hammer', 'Chisel'],
-    correctAnswer: 1,
-    explanation: 'Jigsaw cuts curves.'
-  },
-  {
-    question: 'What is wood seasoning?',
-    options: ['Painting', 'Removing moisture', 'Cutting', 'Polishing'],
-    correctAnswer: 1,
-    explanation: 'Seasoning removes moisture.'
-  },
-  {
-    question: 'Strongest wood joint?',
-    options: ['Butt joint', 'Dovetail joint', 'Glue joint', 'Nail joint'],
-    correctAnswer: 1,
-    explanation: 'Dovetail joint is strongest.'
-  },
-  {
-    question: 'Tool for accurate measurement?',
-    options: ['Hammer', 'Saw', 'Measuring tape', 'Knife'],
-    correctAnswer: 2,
-    explanation: 'Measuring tape ensures accuracy.'
-  }
-],
-
-  };
-
-  const normalizedCategory = categoryName?.trim().toLowerCase();
-
-  const matchedKey = Object.keys(fallback).find(
-    key => key.toLowerCase() === normalizedCategory
-  );
-
-  return matchedKey ? fallback[matchedKey] : [];
 };

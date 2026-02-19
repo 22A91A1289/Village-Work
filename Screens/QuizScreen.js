@@ -27,8 +27,7 @@ const QuizScreen = ({ route, navigation }) => {
   const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutes in seconds
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false); // Start as false to show language selector first
-  const [showLanguageSelector, setShowLanguageSelector] = useState(true);
-  const [selectedQuizLanguage, setSelectedQuizLanguage] = useState(null);
+ 
   const [eligibilityCheck, setEligibilityCheck] = useState({
     canAttempt: true,
     isChecking: true,
@@ -44,10 +43,10 @@ const QuizScreen = ({ route, navigation }) => {
 
   // Load questions only if eligible and language selected
   useEffect(() => {
-    if (eligibilityCheck.canAttempt && !eligibilityCheck.isChecking && selectedQuizLanguage) {
-      loadQuestions();
-    }
-  }, [eligibilityCheck.canAttempt, eligibilityCheck.isChecking, selectedQuizLanguage]);
+  if (eligibilityCheck.canAttempt && !eligibilityCheck.isChecking) {
+    loadQuestions();
+  }
+}, [eligibilityCheck.canAttempt, eligibilityCheck.isChecking]);
 
   const checkQuizEligibility = async () => {
     try {
@@ -95,7 +94,8 @@ const QuizScreen = ({ route, navigation }) => {
     setLoading(true);
 
     const categoryName = category?.name || 'Electrician';
-    const quizLang = selectedQuizLanguage || language;
+    const quizLang = language;
+
 
     console.log(`📚 Loading questions for ${categoryName}`);
     console.log(`🌐 Language: ${quizLang}`);
@@ -108,11 +108,11 @@ const QuizScreen = ({ route, navigation }) => {
     console.log("🧠 Trying NLP question generation...");
 
     const nlpQuestions = await generateQuizQuestions(
-      categoryName,
-      5,
-      quizLang,
-      attemptNumber
-    );
+  categoryName,
+  5,
+  attemptNumber   // ❌ Removed quizLang from here
+);
+
 
     // ✅ If NLP works
     if (nlpQuestions && nlpQuestions.length >= 5) {
@@ -571,81 +571,7 @@ const QuizScreen = ({ route, navigation }) => {
     );
   }
 
-  // Language selector screen - MUST COME BEFORE LOADING
-  if (showLanguageSelector) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#374151" />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Select Quiz Language</Text>
-            <Text style={styles.headerSubtitle}>{category?.name || 'General'} Skill Test</Text>
-          </View>
-          <View style={{ width: 40 }} />
-        </View>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.languageSelectorContainer}>
-            <Ionicons name="language" size={64} color="#4F46E5" style={styles.languageIcon} />
-            <Text style={styles.languageTitle}>Choose Your Test Language</Text>
-            <Text style={styles.languageSubtitle}>
-              Questions and answers will be shown in the selected language
-            </Text>
-
-            {/* Language Options */}
-            <View style={styles.languageOptionsContainer}>
-              <TouchableOpacity 
-                style={styles.languageOption}
-                onPress={() => {
-                  setSelectedQuizLanguage('en');
-                  setShowLanguageSelector(false);
-                }}
-              >
-                <View style={styles.languageIconContainer}>
-                  <Text style={styles.languageEmoji}>🇬🇧</Text>
-                </View>
-                <Text style={styles.languageOptionTitle}>English</Text>
-                <Text style={styles.languageOptionSubtitle}>Questions in English</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.languageOption}
-                onPress={() => {
-                  setSelectedQuizLanguage('te');
-                  setShowLanguageSelector(false);
-                }}
-              >
-                <View style={styles.languageIconContainer}>
-                  <Text style={styles.languageEmoji}>🇮🇳</Text>
-                </View>
-                <Text style={styles.languageOptionTitle}>తెలుగు (Telugu)</Text>
-                <Text style={styles.languageOptionSubtitle}>Questions in Telugu</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.languageOption}
-                onPress={() => {
-                  setSelectedQuizLanguage('hi');
-                  setShowLanguageSelector(false);
-                }}
-              >
-                <View style={styles.languageIconContainer}>
-                  <Text style={styles.languageEmoji}>🇮🇳</Text>
-                </View>
-                <Text style={styles.languageOptionTitle}>हिंदी (Hindi)</Text>
-                <Text style={styles.languageOptionSubtitle}>Questions in Hindi</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
 
   // Show loading state while questions are being loaded (AFTER language selection)
   if (loading) {
