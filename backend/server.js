@@ -1,25 +1,56 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path'); // Required for path.join
 const http = require('http');
 const socketIo = require('socket.io');
 const connectDB = require('./config/database');
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from project root
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
+// Verify critical env vars
+if (!process.env.MONGODB_URI) {
+  console.error('❌ FATAL ERROR: MONGODB_URI is not defined.');
+  console.error('   Please check that .env exists in the project root and mimics .env.example');
+  process.exit(1);
+}
 
 // Initialize Express app
 const app = express();
 const server = http.createServer(app);
 
-// Initialize Socket.io with CORS (same origins as Express + Vercel)
+// Helper to check if origin is allowed (localhost, local network, Vercel)
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Allow non-browser requests (e.g. Postman, mobile apps)
+  
+  // Allow localhost
+  if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) return true;
+  
+  // Allow local network IPs (192.168.x.x, 10.x.x.x, 172.x.x.x)
+  // This allows any device on the same WiFi to connect
+  if (
+    origin.startsWith('http://192.168.') || 
+    origin.startsWith('http://10.') || 
+    origin.startsWith('http://172.')
+  ) return true;
+  
+  // Allow Vercel deployments
+  if (/\.vercel\.app$/.test(origin)) return true;
+  
+  return false;
+};
+
+// Initialize Socket.io with CORS
 const io = socketIo(server, {
   cors: {
     origin: (origin, callback) => {
-      const allowed = ['http://localhost:3000', 'http://192.168.31.14:3000'];
-      const vercel = origin && /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin);
-      if (!origin || allowed.includes(origin) || vercel) callback(null, true);
-      else callback(null, false);
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        console.log('🚫 Socket blocked origin:', origin);
+        callback(null, false);
+      }
     },
     methods: ['GET', 'POST'],
     credentials: true
@@ -32,20 +63,12 @@ app.set('io', io);
 // Connect to MongoDB
 connectDB();
 
-// Middleware - allow localhost, local IP, Expo web, and Vercel dashboard
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'http://192.168.31.14:3000',
-  'http://localhost:19006'
-];
-const isVercel = (origin) => origin && /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin);
-
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || isVercel(origin)) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
+      console.log('🚫 CORS blocked origin:', origin);
       callback(null, false);
     }
   },
