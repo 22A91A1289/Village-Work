@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path'); // Required for path.join
+const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
 const connectDB = require('./config/database');
@@ -22,6 +22,11 @@ const server = http.createServer(app);
 
 // Helper to check if origin is allowed (localhost, local network, Vercel)
 const isAllowedOrigin = (origin) => {
+  // Allow all origins in development mode for debugging
+  if (process.env.NODE_ENV === 'development') {
+    return true;
+  }
+
   if (!origin) return true; // Allow non-browser requests (e.g. Postman, mobile apps)
   
   // Allow localhost
@@ -45,6 +50,7 @@ const isAllowedOrigin = (origin) => {
 const io = socketIo(server, {
   cors: {
     origin: (origin, callback) => {
+      console.log('🔌 Socket connection attempt from:', origin);
       if (isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
@@ -65,6 +71,7 @@ connectDB();
 
 app.use(cors({
   origin: (origin, callback) => {
+    console.log('🌐 CORS check for origin:', origin);
     if (isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
@@ -74,7 +81,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
