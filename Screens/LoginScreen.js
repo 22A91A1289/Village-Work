@@ -64,8 +64,8 @@ const LoginScreen = ({ navigation }) => {
       }
 
       // Update auth state and navigate to worker app
+      // The AppNavigator will automatically switch to the authenticated stack
       login();
-      navigation.reset({ index: 0, routes: [{ name: 'WorkerTabNavigator' }] });
     } catch (err) {
       const message =
         err?.response?.data?.error ||

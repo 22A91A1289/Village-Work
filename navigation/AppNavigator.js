@@ -72,43 +72,47 @@ export default function AppNavigator() {
 
   return (
     <View style={styles.navWrapper}>
-      <NavigationContainer key={isLoggedIn ? 'main' : 'auth'}>
-      <Stack.Navigator
-        key={isLoggedIn ? 'main' : 'auth'}
-        initialRouteName={isLoggedIn ? "WorkerTabNavigator" : "LoginScreen"}
-        screenOptions={{
-          headerShown: false,
-          cardStyle: { flex: 1 },
-        }}
-      >
-        {/* Auth screens - always available */}
-        <Stack.Screen name="LoginScreen" component={LoginScreen} />
-        <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
-        <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
-        <Stack.Screen name="WorkPreferencesScreen" component={WorkPreferencesScreen} />
-
-        {/* Main app - only when logged in */}
-        <Stack.Screen name="WorkerTabNavigator" component={WorkerTabNavigator} />
-        <Stack.Screen name="JobDetailsScreen" component={JobDetailsScreen} />
-        <Stack.Screen name="CategoryJobs" component={CategoryJobsScreen} />
-        <Stack.Screen name="Search" component={SearchScreen} />
-        <Stack.Screen name="ActiveJobScreen" component={ActiveJobScreen} />
-        <Stack.Screen name="SkillAssessmentScreen" component={SkillAssessmentScreen} />
-        <Stack.Screen name="QuizScreen" component={QuizScreen} />
-        <Stack.Screen name="TestStatusScreen" component={TestStatusScreen} />
-        <Stack.Screen name="VideoUploadScreen" component={VideoUploadScreen} />
-        <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
-        <Stack.Screen name="ChatScreen" component={ChatScreen} />
-        <Stack.Screen name="MyApplicationsScreen" component={MyApplicationsScreen} />
-        <Stack.Screen name="NotificationsScreen" component={NotificationsScreen} />
-        <Stack.Screen name="PaymentHistoryScreen" component={PaymentHistoryScreen} />
-        <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
-        <Stack.Screen name="BankAccountScreen" component={BankAccountScreen} />
-        <Stack.Screen name="WorkHistoryScreen" component={WorkHistoryScreen} />
-        <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
-        <Stack.Screen name="RatingScreen" component={RatingScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            cardStyle: { flex: 1 },
+          }}
+        >
+          {isLoggedIn ? (
+            // User is signed in
+            <>
+              <Stack.Screen name="WorkerTabNavigator" component={WorkerTabNavigator} />
+              <Stack.Screen name="JobDetailsScreen" component={JobDetailsScreen} />
+              <Stack.Screen name="CategoryJobs" component={CategoryJobsScreen} />
+              <Stack.Screen name="Search" component={SearchScreen} />
+              <Stack.Screen name="ActiveJobScreen" component={ActiveJobScreen} />
+              <Stack.Screen name="SkillAssessmentScreen" component={SkillAssessmentScreen} />
+              <Stack.Screen name="QuizScreen" component={QuizScreen} />
+              <Stack.Screen name="TestStatusScreen" component={TestStatusScreen} />
+              <Stack.Screen name="VideoUploadScreen" component={VideoUploadScreen} />
+              <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
+              <Stack.Screen name="ChatScreen" component={ChatScreen} />
+              <Stack.Screen name="MyApplicationsScreen" component={MyApplicationsScreen} />
+              <Stack.Screen name="NotificationsScreen" component={NotificationsScreen} />
+              <Stack.Screen name="PaymentHistoryScreen" component={PaymentHistoryScreen} />
+              <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+              <Stack.Screen name="BankAccountScreen" component={BankAccountScreen} />
+              <Stack.Screen name="WorkHistoryScreen" component={WorkHistoryScreen} />
+              <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
+              <Stack.Screen name="RatingScreen" component={RatingScreen} />
+            </>
+          ) : (
+            // No user is signed in
+            <>
+              <Stack.Screen name="LoginScreen" component={LoginScreen} />
+              <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+              <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
+              <Stack.Screen name="WorkPreferencesScreen" component={WorkPreferencesScreen} />
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
     </View>
   );
 }

@@ -5,14 +5,25 @@ const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
 const connectDB = require('./config/database');
+const fs = require('fs');
 
-// Load environment variables from project root
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+// Robustly load .env
+// 1. Try project root (if running from backend/)
+let envPath = path.join(__dirname, '..', '.env');
+if (!fs.existsSync(envPath)) {
+  // 2. Try current directory (if running from root)
+  envPath = path.join(__dirname, '.env');
+}
+
+dotenv.config({ path: envPath });
+
+console.log(`📡 Loaded environment from: ${envPath}`);
 
 // Verify critical env vars
 if (!process.env.MONGODB_URI) {
   console.error('❌ FATAL ERROR: MONGODB_URI is not defined.');
-  console.error('   Please check that .env exists in the project root and mimics .env.example');
+  console.error(`   Checked path: ${envPath}`);
+  console.error('   Please check that .env exists and contains MONGODB_URI');
   process.exit(1);
 }
 
