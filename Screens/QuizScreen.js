@@ -91,60 +91,71 @@ const QuizScreen = ({ route, navigation }) => {
   };
 
   const loadQuestions = async () => {
-    try {
-      setLoading(true);
-      const categoryName = category?.name || 'Electrician';
-      const quizLang = selectedQuizLanguage || language;
-      
-      // Get previously used questions for this category to avoid repetition
-      const usedQuestionsKey = `usedQuestions_${categoryName}`;
-      const storedUsedQuestions = await AsyncStorage.getItem(usedQuestionsKey);
-      const usedQuestions = storedUsedQuestions ? JSON.parse(storedUsedQuestions) : [];
-      
-      console.log(`📚 Loading questions for ${categoryName} in ${quizLang} language`);
-      console.log(`🔄 Previously used questions: ${usedQuestions.length}`);
-      
-      let finalQuestions = [];
-      
-      // TRY AI GENERATION FIRST (for unlimited, dynamic questions in any language)
-      console.log('🤖 Attempting AI question generation...');
-      const aiQuestions = await generateQuizQuestions(categoryName, 5, quizLang);
-      
-      if (aiQuestions && aiQuestions.length >= 5) {
-        // AI generation successful! Use fresh AI-generated questions
-        console.log('✅ Using AI-generated questions (fresh & dynamic)');
-        finalQuestions = aiQuestions;
-      } else {
-        // AI failed or not configured - use fallback questions
-        console.log('⚡ AI not available, using fallback questions');
-        
-        const fallbackQuestions = getFallbackQuestions(categoryName, quizLang);
-        const unusedFallback = fallbackQuestions.filter(q => 
-          !usedQuestions.some(usedQ => usedQ.toLowerCase() === q.question.toLowerCase())
-        );
-        
-        finalQuestions = unusedFallback.sort(() => 0.5 - Math.random()).slice(0, 5);
-        
-        // If all questions used, reset and use all
-        if (finalQuestions.length < 5) {
-          console.log('⚠️ All fallback questions used, resetting...');
-          await AsyncStorage.removeItem(usedQuestionsKey);
-          finalQuestions = fallbackQuestions.sort(() => 0.5 - Math.random()).slice(0, 5);
-        }
+  try {
+    setLoading(true);
+
+    const categoryName = category?.name || 'Electrician';
+    const quizLang = selectedQuizLanguage || language;
+
+    console.log(`📚 Loading questions for ${categoryName}`);
+    console.log(`🌐 Language: ${quizLang}`);
+
+    let finalQuestions = [];
+
+    // 🔥 Attempt based logic
+    let attemptNumber = eligibilityCheck.isFirstAttempt ? 0 : 1;
+
+    console.log("🧠 Trying NLP question generation...");
+
+    const nlpQuestions = await generateQuizQuestions(
+      categoryName,
+      5,
+      quizLang,
+      attemptNumber
+    );
+
+    // ✅ If NLP works
+    if (nlpQuestions && nlpQuestions.length >= 5) {
+      console.log("✅ Using NLP generated questions");
+      finalQuestions = nlpQuestions;
+    } 
+    else {
+      // ✅ Fallback always works
+      console.log("⚡ NLP failed, loading fallback questions");
+
+      const fallbackQuestions = getFallbackQuestions(categoryName);
+
+      if (!fallbackQuestions || fallbackQuestions.length === 0) {
+        console.log("❌ No fallback found for:", categoryName);
+        setQuestions([]);
+        return;
       }
-      
-      setQuestions(finalQuestions);
-      console.log(`✅ Loaded ${finalQuestions.length} questions`);
-    } catch (error) {
-      console.error('Error loading questions:', error);
-      // Fallback to hardcoded questions on error
-      const categoryName = category?.name || 'Electrician';
-      const fallbackQuestions = getFallbackQuestions(categoryName, selectedQuizLanguage || language);
-      setQuestions(fallbackQuestions.slice(0, 5));
-    } finally {
-      setLoading(false);
+
+      finalQuestions = fallbackQuestions
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 5);
     }
-  };
+
+    setQuestions(finalQuestions);
+    console.log(`✅ Loaded ${finalQuestions.length} questions`);
+
+  } catch (error) {
+    console.error("❌ Error loading questions:", error);
+
+    // Absolute safety fallback
+    const categoryName = category?.name || 'Electrician';
+    const fallbackQuestions = getFallbackQuestions(categoryName);
+
+    setQuestions(
+      fallbackQuestions
+        ? fallbackQuestions.slice(0, 5)
+        : []
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Legacy function - kept for backward compatibility (not used anymore)
   const generateQuestions = (categoryName) => {

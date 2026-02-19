@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Alert,
   Modal,
-  TextInput,
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +17,6 @@ import { api } from '../utils/api';
 const SkillAssessmentScreen = ({ navigation }) => {
   const [showTestRegistration, setShowTestRegistration] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [availableTesters, setAvailableTesters] = useState([]);
 
   const technicalCategories = [
     { name: 'Electrician', icon: 'flash', color: '#EF4444' },
@@ -29,83 +27,10 @@ const SkillAssessmentScreen = ({ navigation }) => {
     { name: 'Data Entry', icon: 'laptop', color: '#10B981' },
   ];
 
-  const nearbyTesters = [
-    {
-      id: 1,
-      name: 'Ramesh Kumar',
-      category: 'Electrician',
-      experience: '15 years',
-      rating: 4.8,
-      distance: '2.5 km',
-      availableSlots: ['Today 2 PM', 'Tomorrow 10 AM', 'Tomorrow 3 PM'],
-      phone: '9876543210',
-    },
-    {
-      id: 2,
-      name: 'Suresh Naidu',
-      category: 'Plumber',
-      experience: '12 years',
-      rating: 4.6,
-      distance: '3.1 km',
-      availableSlots: ['Today 4 PM', 'Tomorrow 11 AM'],
-      phone: '9876501234',
-    },
-    {
-      id: 3,
-      name: 'Anil Reddy',
-      category: 'Carpenter',
-      experience: '18 years',
-      rating: 4.9,
-      distance: '1.8 km',
-      availableSlots: ['Today 6 PM', 'Tomorrow 9 AM', 'Tomorrow 2 PM'],
-      phone: '9998887777',
-    },
-    {
-      id: 4,
-      name: 'Vijay Kumar',
-      category: 'Painter',
-      experience: '10 years',
-      rating: 4.7,
-      distance: '2.2 km',
-      availableSlots: ['Today 3 PM', 'Tomorrow 1 PM'],
-      phone: '9876512345',
-    },
-    {
-      id: 5,
-      name: 'Krishna Rao',
-      category: 'Mechanic',
-      experience: '14 years',
-      rating: 4.8,
-      distance: '3.5 km',
-      availableSlots: ['Today 5 PM', 'Tomorrow 12 PM'],
-      phone: '9876523456',
-    },
-    {
-      id: 6,
-      name: 'Sai Prasad',
-      category: 'Data Entry',
-      experience: '8 years',
-      rating: 4.5,
-      distance: '1.5 km',
-      availableSlots: ['Today 4 PM', 'Tomorrow 10 AM', 'Tomorrow 4 PM'],
-      phone: '9876534567',
-    },
-  ];
-
   useEffect(() => {
     // Show category selection modal directly when screen loads
     setShowTestRegistration(true);
   }, []);
-
-  useEffect(() => {
-    // Filter testers based on selected category
-    if (selectedCategory) {
-      const filtered = nearbyTesters.filter(tester => 
-        tester.category.toLowerCase() === selectedCategory.name.toLowerCase()
-      );
-      setAvailableTesters(filtered);
-    }
-  }, [selectedCategory]);
 
 
   const handleCategorySelection = async (category) => {
@@ -153,46 +78,6 @@ const SkillAssessmentScreen = ({ navigation }) => {
     }
   };
 
-  const handleTestRegistration = async (tester) => {
-    if (!phoneNumber.trim()) {
-      Alert.alert('Error', 'Please enter your phone number');
-      return;
-    }
-
-    Alert.alert(
-      'Schedule Skill Test',
-      `Schedule test with ${tester.name}?\n\nCategory: ${tester.category}\nExperience: ${tester.experience}\nRating: ${tester.rating}⭐\nDistance: ${tester.distance}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Schedule',
-          onPress: async () => {
-            try {
-              await AsyncStorage.setItem('userSkillLevel', 'experienced');
-              await AsyncStorage.setItem('skillAssessmentCompleted', 'pending');
-              await AsyncStorage.setItem('selectedTester', JSON.stringify(tester));
-              await AsyncStorage.setItem('userPhone', phoneNumber);
-              await AsyncStorage.setItem('selectedCategory', selectedCategory.name);
-              
-              Alert.alert(
-                'Test Scheduled!',
-                `${tester.name} will contact you within 2 hours to confirm the test time.\n\nYou can access helper jobs while waiting for your test.`,
-                [
-                  {
-                    text: 'OK',
-                    onPress: () => navigation.replace('WorkerTabs')
-                  }
-                ]
-              );
-            } catch (error) {
-              console.error('Error scheduling test:', error);
-              Alert.alert('Error', 'Failed to schedule test. Please try again.');
-            }
-          }
-        }
-      ]
-    );
-  };
 
 
   return (
@@ -457,107 +342,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1F2937',
     marginTop: 8,
-  },
-  phoneInput: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  testerCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  testerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  testerInfo: {
-    flex: 1,
-  },
-  testerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  testerCategory: {
-    fontSize: 14,
-    color: '#4F46E5',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  testerDetails: {
-    flexDirection: 'row',
-    marginTop: 4,
-    gap: 12,
-  },
-  testerDetail: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  scheduleButton: {
-    backgroundColor: '#4F46E5',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  scheduleButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  slotsContainer: {
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-    paddingTop: 12,
-  },
-  slotsTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginBottom: 8,
-  },
-  slotsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  slotTag: {
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-  },
-  slotText: {
-    fontSize: 12,
-    color: '#047857',
-    fontWeight: '500',
-  },
-  noTesters: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  noTestersText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginTop: 16,
-  },
-  noTestersSubtext: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    marginTop: 4,
   },
   quizInfoCard: {
     backgroundColor: '#F8FAFF',

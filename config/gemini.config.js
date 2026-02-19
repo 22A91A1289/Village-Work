@@ -5,11 +5,10 @@
  */
 
 // ⚠️ IMPORTANT: Replace with your actual Gemini API key
-export const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
-
+export const GEMINI_API_KEY = 'AIzaSyBvwv1BrYR80bB-9dZ0NI6uOYe9M4lGMRs';
 // API Configuration
 export const GEMINI_CONFIG = {
-  model: 'gemini-pro', // Model to use
+  model: 'gemini-1.5-pro-latest', // Model to use (gemini-pro is deprecated, using gemini-1.5-flash)
   timeout: 8000, // Timeout in milliseconds
   maxRetries: 1, // Number of retries on failure
 };

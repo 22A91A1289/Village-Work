@@ -1143,8 +1143,10 @@ const HomeScreen = ({ navigation }) => {
         // Update jobs state - filter based on current quiz status
         setOriginalJobs(transformedJobs);
         
-        // Extract unique technical categories from jobs
-        const technicalJobs = transformedJobs.filter(job => job.type === 'Technical Work');
+        // Extract unique technical categories from jobs (exclude Farming)
+        const technicalJobs = transformedJobs.filter(job => 
+          job.type === 'Technical Work' && job.category !== 'Farming'
+        );
         const uniqueCategories = [...new Set(technicalJobs.map(job => job.category))].filter(Boolean);
         
         // Map backend categories to display format
@@ -1159,18 +1161,21 @@ const HomeScreen = ({ navigation }) => {
           };
         });
         
-        // Merge default categories with backend categories (remove duplicates)
+        // Merge default categories with backend categories (remove duplicates and Farming)
         const allCategoryNames = new Set([
           ...defaultTechnicalCategories.map(c => c.name),
           ...backendCategories.map(c => c.name)
         ]);
         
-        const mergedCategories = Array.from(allCategoryNames).map(categoryName => {
-          // Prefer backend category if it exists, otherwise use default
-          const backendCat = backendCategories.find(c => c.name === categoryName);
-          const defaultCat = defaultTechnicalCategories.find(c => c.name === categoryName);
-          return backendCat || defaultCat;
-        }).filter(Boolean);
+        const mergedCategories = Array.from(allCategoryNames)
+          .filter(categoryName => categoryName !== 'Farming') // Remove Farming from technical categories
+          .map(categoryName => {
+            // Prefer backend category if it exists, otherwise use default
+            const backendCat = backendCategories.find(c => c.name === categoryName);
+            const defaultCat = defaultTechnicalCategories.find(c => c.name === categoryName);
+            return backendCat || defaultCat;
+          })
+          .filter(Boolean);
         
         setTechnicalCategories(mergedCategories);
         console.log('📊 Technical categories (default + backend):', mergedCategories.length, mergedCategories.map(c => c.name));
