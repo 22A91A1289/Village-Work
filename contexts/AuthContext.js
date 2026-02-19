@@ -36,7 +36,10 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  const login = () => setIsLoggedIn(true);
+  const login = () => {
+    console.log('🔐 AuthContext: login() called');
+    setIsLoggedIn(true);
+  };
 
   const logout = async () => {
     try {

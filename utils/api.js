@@ -1,6 +1,7 @@
 // Helper to get local IP from Expo packager
 // This ensures it works on any machine without hardcoding IPs
 import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const getLocalIpAddress = () => {
   if (__DEV__) {

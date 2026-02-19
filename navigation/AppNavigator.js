@@ -61,6 +61,8 @@ const Stack = createStackNavigator();
 
 export default function AppNavigator() {
   const { isLoggedIn, isLoading } = useAuth();
+  
+  console.log(`🧭 AppNavigator: isLoggedIn = ${isLoggedIn}, isLoading = ${isLoading}`);
 
   if (isLoading) {
     return (

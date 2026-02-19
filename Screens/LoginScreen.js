@@ -41,8 +41,12 @@ const LoginScreen = ({ navigation }) => {
         password: password,
       });
 
+      console.log('📦 Login Response User:', result.user);
+      console.log('👤 Detected Role:', result.user?.role);
+
       // Check if this is an employer account
       if (result.user?.role === 'owner') {
+        console.warn('⛔ Blocking login: User is an owner');
         // Don't save auth for employers - redirect to web
         Alert.alert(
           'Employer Account Detected',
@@ -53,8 +57,30 @@ const LoginScreen = ({ navigation }) => {
       }
 
       // Save auth for worker accounts (persistent login)
-      await setAuth(result.token, result.user);
-      await AsyncStorage.setItem('userRole', 'worker');
+      console.log('💾 LoginScreen: Saving auth data...');
+      
+      // DEBUG CHECK
+      if (!AsyncStorage) {
+         Alert.alert('Debug', 'AsyncStorage is NULL/UNDEFINED in LoginScreen');
+      } else {
+         // verifying it's an object
+         // Alert.alert('Debug', 'AsyncStorage type: ' + typeof AsyncStorage);
+      }
+
+      try {
+        await setAuth(result.token, result.user);
+        console.log('💾 LoginScreen: sAuth data saved.');
+      } catch (e) {
+        console.error('setAuth failed', e);
+        throw new Error('setAuth failed: ' + e.message);
+      }
+
+      try {
+        await AsyncStorage.setItem('userRole', 'worker');
+      } catch (e) {
+         console.error('AsyncStorage.setItem failed', e);
+         throw new Error('AsyncStorage.setItem failed: ' + e.message);
+      }
       
       // Set default skill level if not exists
       const existingSkillLevel = await AsyncStorage.getItem('userSkillLevel');
@@ -65,8 +91,10 @@ const LoginScreen = ({ navigation }) => {
 
       // Update auth state and navigate to worker app
       // The AppNavigator will automatically switch to the authenticated stack
+      console.log('🚪 LoginScreen: Calling login()');
       login();
     } catch (err) {
+      console.error('❌ LoginScreen Error:', err);
       const message =
         err?.response?.data?.error ||
         err?.response?.data?.message ||
@@ -180,7 +208,7 @@ const LoginScreen = ({ navigation }) => {
               ) : (
                 <>
                   <Ionicons name="log-in" size={20} color="#FFFFFF" />
-                  <Text style={styles.loginButtonText}>Login</Text>
+                  <Text style={styles.loginButtonText}>Login v2</Text>
                 </>
               )}
             </TouchableOpacity>
