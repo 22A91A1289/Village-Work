@@ -67,12 +67,12 @@ function getOtpEmailContent(otp) {
 
 function createTransport() {
   ensureEmailConfig();
-  
+
   // Remove any quotes and whitespace from SMTP_FROM
   const cleanFrom = SMTP_FROM.replace(/["']/g, '').trim();
   // Gmail App Password: strip spaces so it works with or without quotes in .env (use SMTP_PASS="xxxx xxxx xxxx xxxx")
   const smtpPass = (SMTP_PASS || '').replace(/["']/g, '').replace(/\s/g, '').trim();
-  
+
   const port = Number(SMTP_PORT);
   const config = {
     host: SMTP_HOST,
@@ -170,7 +170,7 @@ async function sendOtpEmail({ to, otp }) {
     // Fallback to SMTP
     const transporter = createTransport();
     const cleanFrom = SMTP_FROM.replace(/["']/g, '').trim();
-    
+
     console.log('📧 Sending via SMTP...');
     const info = await transporter.sendMail({
       from: cleanFrom,

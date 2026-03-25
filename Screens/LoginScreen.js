@@ -208,7 +208,7 @@ const LoginScreen = ({ navigation }) => {
               ) : (
                 <>
                   <Ionicons name="log-in" size={20} color="#FFFFFF" />
-                  <Text style={styles.loginButtonText}>Login v2</Text>
+                  <Text style={styles.loginButtonText}>Login </Text>
                 </>
               )}
             </TouchableOpacity>
